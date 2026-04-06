@@ -16,7 +16,7 @@ struct MainView: View {
     private let documentsUrlString = "https://ayl.ru/dokumenty"
     
     // MARK: - Body
-
+    
     var body: some View {
         NavigationStack {
             ZStack {
@@ -40,6 +40,7 @@ struct MainView: View {
             introSection
             formatsSection
             methodologySection
+            whyChooseUsLink
             footerSection
         }
     }
@@ -106,7 +107,6 @@ struct MainView: View {
             Text("Ознакомиться с краткой информацией об организации и учредительными документами вы можете по **кнопке ниже**")
                 .font(.system(size: 14))
                 .foregroundColor(.secondary)
-                .padding(.top, 10)
             documentsButton
         }
     }
@@ -122,6 +122,20 @@ struct MainView: View {
                 .padding()
                 .background(Color.minty)
                 .cornerRadius(15)
+        }
+    }
+    
+    private var whyChooseUsLink: some View {
+        NavigationLink {
+            WhyChooseUsView()
+        } label: {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Почему выбирают нас?")
+                    .font(.title3.bold())
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.vertical, 10)
+            .contentShape(Rectangle())
         }
     }
     
