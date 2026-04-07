@@ -48,11 +48,10 @@ struct MainView: View {
     private var logoSection: some View {
         HStack {
             Spacer()
-            Image("ayl")
+            Image("ayl1")
                 .resizable()
                 .scaledToFit()
                 .frame(width: 120, height: 120)
-                .blendMode(.multiply)
             Spacer()
         }
         .padding(.top, 10)
@@ -64,7 +63,7 @@ struct MainView: View {
                 .font(.title.bold())
             Rectangle()
                 .frame(width: 50, height: 4)
-                .foregroundColor(.lightBlue)
+                .foregroundColor(.violet)
         }
         .padding(.top, 10)
     }

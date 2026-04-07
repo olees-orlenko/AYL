@@ -51,7 +51,7 @@ struct WhyChooseUsView: View {
                 .font(.title2.bold())
             Rectangle()
                 .frame(width: 60, height: 4)
-                .foregroundColor(.lightBlue)
+                .foregroundColor(.violet)
         }
     }
     

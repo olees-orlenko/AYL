@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct AYLApp: App {
+    @State private var scenePhase = ScenePhase.active
+    
     var body: some Scene {
         WindowGroup {
-            TabBarView()
+            ContentView()
+                .environment(\.scenePhase, scenePhase)
         }
     }
 }
