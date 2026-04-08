@@ -14,6 +14,7 @@ struct MainView: View {
     // MARK: - Properties
     
     private let documentsUrlString = "https://ayl.ru/dokumenty"
+    @AppStorage("isDarkMode") private var isDarkMode = false
     
     // MARK: - Body
     
@@ -28,6 +29,16 @@ struct MainView: View {
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        isDarkMode.toggle()
+                    } label: {
+                        Image(systemName: isDarkMode ? "sun.max.fill" : "moon.fill")
+                            .foregroundColor(isDarkMode ? .minty : .lightBlue)
+                    }
+                }
+            }
         }
     }
     
@@ -128,13 +139,18 @@ struct MainView: View {
         NavigationLink {
             WhyChooseUsView()
         } label: {
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Почему выбирают нас?")
-                    .font(.title3.bold())
+            HStack {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Почему выбирают нас?")
+                        .font(.title3.bold())
+                        .foregroundColor(.violet)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.violet)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.vertical, 10)
-            .contentShape(Rectangle())
         }
     }
     

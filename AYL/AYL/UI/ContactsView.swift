@@ -2,56 +2,72 @@
 //  ContactsView.swift
 //  AYL
 //
-//  Created by Олеся Орленко on 02.04.2026.
+//  Created by Олеся Орленко on 08.04.2026.
 //
 
 import SwiftUI
-
-// MARK: - ContactsView
 
 struct ContactsView: View {
     
     // MARK: - Properties
     
-    @Environment(\.dismiss) var dismiss
-    
-    private let tgMoscow = "https://t.me/aylrus"
-    private let vkMoscow = "https://vk.com/aylrussia"
-    private let siteMoscow = "https://ayl.ru"
-    private let tgAltai = "https://t.me/aylaltay"
-    private let tgKrasnodar = "https://t.me/ayl_krd"
-    private let vkKrasnodar = "https://vk.com/ayl_krd"
-    private let siteKrasnodar = "https://aylkrd.tilda.ws/"
-    private let tgBarnaul = "https://t.me/"
-    private let vkBarnaul = "https://vk.com/club241886"
-    private let tgOrel = "https://t.me/AYLOrel"
-    private let tgTomsk = "https://t.me/tomskaul"
+    private let telegramURL = "https://t.me/aylrus"
+    private let vkURL = "https://vk.com/aylrussia"
+    private let youtubeURL = "https://www.youtube.com/@AYL_Russia"
+    private let websiteURL = "https://ayl.ru"
+    private let emailURL = "mailto:info@ayl.ru"
+    private let phoneURL = "tel:+79102605829"
+    private let documentsUrlString = "https://ayl.ru/supportus"
     
     // MARK: - Body
     
     var body: some View {
-        ZStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 30) {
-                    headerSection
-                    introSection
-                    regionsList
+        NavigationStack {
+            ZStack {
+                GeometryReader { geometry in
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 10) {
+                            logoSection
+                            headerSection
+                            detailedInfoSection
+                            socialsSection
+                            regionsNavigationLink
+                            Spacer(minLength: 10)
+                            helpNavigationLink
+                        }
+                        .padding(.horizontal, 25)
+                        .padding(.top, 10)
+                        .padding(.bottom, 20)
+                        .frame(minHeight: geometry.size.height)
+                    }
                 }
-                .padding(.horizontal, 25)
-                .padding(.top, 20)
-                .padding(.bottom, 40)
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Color.clear.frame(height: 0)
+                }
             }
         }
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)
-        .toolbar { toolbarContent }
     }
     
     // MARK: - Subviews
     
+    private var logoSection: some View {
+        HStack {
+            Spacer()
+            Image("ayl1")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 120, height: 120)
+            Spacer()
+        }
+        .padding(.top, 10)
+    }
+    
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("АЮЛ В РЕГИОНАХ")
+            Text("Контакты")
                 .font(.title.bold())
             Rectangle()
                 .frame(width: 50, height: 4)
@@ -60,77 +76,130 @@ struct ContactsView: View {
         .padding(.top, 10)
     }
     
-    private var introSection: some View {
-        Text("Наша ассоциация проводит мероприятия по всей России. Узнать о событиях в регионах вы можете в их социальных сетях!")
-            .font(.body)
-            .lineSpacing(5)
-    }
-    
-    private var regionsList: some View {
-        VStack(alignment: .leading, spacing: 25) {
-            regionRow(name: "Москва",
-                      telegram: tgMoscow,
-                      website: siteMoscow,
-                      vkontakte: vkMoscow)
-            regionRow(name: "Республика Алтай", telegram: tgAltai)
-            regionRow(name: "Краснодарский край",
-                      telegram: tgKrasnodar,
-                      website: siteKrasnodar,
-                      vkontakte: vkKrasnodar)
-            regionRow(name: "Барнаул", vkontakte: vkBarnaul)
-            regionRow(name: "Орёл", telegram: tgOrel)
-            regionRow(name: "Томск", telegram: tgTomsk)
+    private var detailedInfoSection: some View {
+        VStack(alignment: .leading, spacing: 15) {
+            contactLinkItem(title: "Сайт:", value: "ayl.ru", url: websiteURL)
+            emailButtonItem(title: "Электронная почта:", value: "info@ayl.ru", url: emailURL)
+            phoneButtonItem(title: "Телефон:", value: "+7 (910) 260-58-29", url: phoneURL)
+            Text("Исполнительный директор\nАлёна Коваленко")
+                .font(.body)
         }
     }
     
-    // MARK: - Toolbar
+    private var socialsSection: some View {
+        HStack(spacing: 25) {
+            socialCircleButton(systemIcon: "paperplane.fill", url: telegramURL)
+            socialCircleButton(systemIcon: "play.fill", url: youtubeURL)
+            socialCircleButton(imageName: "vk_logo", url: vkURL)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
     
-    private var toolbarContent: some ToolbarContent {
-        ToolbarItem(placement: .navigationBarLeading) {
-            Button { dismiss() } label: {
-                Image(systemName: "chevron.left")
+    private var regionsNavigationLink: some View {
+        NavigationLink {
+            RegionsView()
+        } label: {
+            HStack {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("АЮЛ в регионах")
+                        .font(.title3.bold())
+                        .foregroundColor(.violet)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.violet)
             }
+            .padding(.vertical, 15)
+        }
+    }
+    
+    private var helpNavigationLink: some View {
+        NavigationLink {
+            DocumentWebView(urlString: documentsUrlString)
+        } label: {
+            Text("Поддержать нас")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color.minty)
+                .cornerRadius(15)
         }
     }
     
     // MARK: - Helpers
     
-    private func regionRow(name: String, telegram: String? = nil, website: String? = nil, vkontakte: String? = nil) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 12) {
-                Image("ayl1")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 24, height: 24)
-                Text(name)
-                    .font(.system(size: 20, weight: .bold))
+    private func socialCircleButton(systemIcon: String? = nil, imageName: String? = nil, url: String) -> some View {
+        Link(destination: URL(string: url)!) {
+            ZStack {
+                Circle()
+                    .frame(width: 40, height: 40)
+                    .foregroundColor(.lightBlue)
+                if let systemIcon = systemIcon {
+                    Image(systemName: systemIcon)
+                        .resizable()
+                        .scaledToFit()
+                        .foregroundColor(.white)
+                        .frame(width: 20, height: 20)
+                } else if let imageName = imageName {
+                    Image(imageName)
+                        .resizable()
+                        .scaledToFit()
+                        .foregroundColor(.white)
+                        .frame(width: 32, height: 32)
+                }
             }
-            VStack(alignment: .leading, spacing: 6) {
-                if let tg = telegram {
-                    linkItem(title: "Телеграм-канал", url: tg)
-                }
-                if let site = website {
-                    linkItem(title: "Сайт", url: site)
-                }
-                if let vk = vkontakte {
-                    linkItem(title: "Вконтакте", url: vk)
-                }
-            }
-            .padding(.leading, 36)
+            .padding(.top, 20)
         }
     }
     
-    private func linkItem(title: String, url: String) -> some View {
-        Group {
-            if let targetUrl = URL(string: url) {
-                Link(destination: targetUrl) {
-                    Text(title)
-                        .font(.system(size: 17))
-                        .foregroundColor(.lightBlue)
+    private func contactLinkItem(title: String, value: String, url: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+            
+            Link(value, destination: URL(string: url)!)
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundColor(.lightBlue)
+        }
+    }
+    
+    private func emailButtonItem(title: String, value: String, url: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+            Button {
+                if let mailURL = URL(string: url) {
+                    if UIApplication.shared.canOpenURL(mailURL) {
+                        UIApplication.shared.open(mailURL)
+                    }
                 }
-            } else {
-                Text(title)
-                    .foregroundColor(.gray)
+            } label: {
+                Text(value)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.lightBlue)
+            }
+        }
+    }
+    
+    private func phoneButtonItem(title: String, value: String, url: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+            Button {
+                if let phoneURL = URL(string: url) {
+                    if UIApplication.shared.canOpenURL(phoneURL) {
+                        UIApplication.shared.open(phoneURL)
+                    }
+                }
+            } label: {
+                Text(value)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.lightBlue)
             }
         }
     }
