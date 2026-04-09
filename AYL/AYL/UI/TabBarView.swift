@@ -16,6 +16,10 @@ struct TabBarView: View {
                 .tabItem {
                     Label("Главная", systemImage: "house.fill")
                 }
+            GalleryView()
+                .tabItem {
+                    Label("Галерея", systemImage: "photo.on.rectangle.fill")
+                }
             ContactsView()
                 .tabItem {
                     Label("Контакты", systemImage: "mappin.and.ellipse")
