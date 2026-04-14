@@ -28,7 +28,7 @@ struct GalleryView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 30) {
+                VStack(alignment: .leading, spacing: 20) {
                     headerSection
                     ForEach(sortedTitles, id: \.self) { title in
                         VStack(alignment: .leading, spacing: 15) {

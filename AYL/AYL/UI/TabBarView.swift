@@ -20,6 +20,14 @@ struct TabBarView: View {
                 .tabItem {
                     Label("Галерея", systemImage: "photo.on.rectangle.fill")
                 }
+            NewsView()
+                .tabItem {
+                    Label("Новости", systemImage: "newspaper.fill")
+                }
+            StaffView()
+                .tabItem {
+                    Label("Штат", systemImage: "person.3.fill")
+                }
             ContactsView()
                 .tabItem {
                     Label("Контакты", systemImage: "mappin.and.ellipse")
