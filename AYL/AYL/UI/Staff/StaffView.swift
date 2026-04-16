@@ -11,24 +11,44 @@ struct StaffView: View {
     
     // MARK: - Properties
     
-    let staffMembers = StaffMember.mockStaff
+    //    let staffMembers = StaffMember.mockStaff
+    @StateObject var viewModel = StaffViewModel()
     
     // MARK: - Body
     
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    headerSection
-                    ForEach(staffMembers) { member in
-                        StaffCard(member: member)
+            ZStack {
+                ScrollView {
+                    if !viewModel.isLoading && !viewModel.staffMembers.isEmpty {
+                        VStack(alignment: .leading, spacing: 20) {
+                            headerSection
+                            ForEach(viewModel.staffMembers) { member in
+                                StaffCard(member: member)
+                            }
+                        }
+                        .padding(.horizontal, 25)
+                        .padding(.top, 20)
+                        .padding(.bottom, 40)
+                    } else if !viewModel.isLoading && viewModel.staffMembers.isEmpty {
+                        VStack {
+                            Spacer()
+                            Text("Список пуст.")
+                                .foregroundColor(.gray)
+                            Spacer()
+                        }
                     }
                 }
-                .padding(.horizontal, 25)
-                .padding(.top, 20)
-                .padding(.bottom, 40)
+                if viewModel.isLoading {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle())
+                        .scaleEffect(1.5)
+                }
             }
             .navigationBarTitleDisplayMode(.inline)
+            .onAppear {
+                viewModel.fetchData()
+            }
         }
     }
     

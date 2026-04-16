@@ -92,8 +92,14 @@ struct StaffCard: View {
 
 struct StaffCard_Previews: PreviewProvider {
     static var previews: some View {
-        StaffCard(member: StaffMember.mockStaff.first ??
-                  StaffMember(name: "Placeholder", position: "Test", bio: "Test bio", photoName: "ayl_logo_1", telegramLink: nil))
+        StaffCard(member: StaffMember(
+            id: "preview_id",
+            name: "Алёна Коваленко",
+            position: "Исполнительный директор",
+            bio: "Алёна руководит стратегическим развитием АЮЛ, вдохновляя команду на новые достижения и поддерживая инициативы молодежи.",
+            photoName: "staff_photo",
+            telegramLink: "https://t.me/alena_vesna_tattoo"
+        ))
         .previewLayout(.sizeThatFits)
         .padding()
     }
