@@ -18,32 +18,38 @@ class StaffViewModel: ObservableObject {
     private var db = Firestore.firestore()
     private var listener: ListenerRegistration?
     
+    // MARK: - Init
+    
+    init() {
+        let settings = db.settings
+        settings.cacheSettings = PersistentCacheSettings()
+        db.settings = settings
+    }
+    
     func fetchData() {
-        isLoading = true
+        if staffMembers.isEmpty {
+            isLoading = true
+        }
         listener?.remove()
         let staffCollection = db.collection("Staff")
         listener = staffCollection.addSnapshotListener { querySnapshot, error in
-            defer {
+            if querySnapshot != nil {
                 self.isLoading = false
             }
             guard let documents = querySnapshot?.documents else {
-                print("Ошибка загрузки: \(error?.localizedDescription ?? "Unknown error")")
+                print("Ошибка: \(error?.localizedDescription ?? "Unknown error")")
+                self.isLoading = false
                 return
             }
             self.staffMembers = documents.compactMap { doc -> StaffMember? in
                 let data = doc.data()
-                let name = data["name"] as? String ?? "N/A"
-                let position = data["position"] as? String ?? "N/A"
-                let bio = data["bio"] as? String ?? "N/A"
-                let photoName = data["photoName"] as? String ?? "ayl_logo_1"
-                let telegramLink = data["telegramLink"] as? String
                 return StaffMember(
                     id: doc.documentID,
-                    name: name,
-                    position: position,
-                    bio: bio,
-                    photoName: photoName,
-                    telegramLink: telegramLink
+                    name: data["name"] as? String ?? "N/A",
+                    position: data["position"] as? String ?? "N/A",
+                    bio: data["bio"] as? String ?? "N/A",
+                    photoName: data["photoName"] as? String ?? "",
+                    telegramLink: data["telegramLink"] as? String
                 )
             }
         }

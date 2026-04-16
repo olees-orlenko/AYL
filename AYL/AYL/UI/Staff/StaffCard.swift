@@ -26,30 +26,32 @@ struct StaffCard: View {
     }
     
     // MARK: - Subviews
-    
+
     private var memberImage: some View {
-        Group {
-            if let uiImage = UIImage(named: member.photoName) {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-            } else {
-                placeholderImage
+            AsyncImage(url: URL(string: member.photoName)) { phase in
+                switch phase {
+                case .success(let image):
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .clipShape(Circle())
+                case .failure, .empty:
+                    placeholderImage
+                @unknown default:
+                    placeholderImage
+                }
             }
+            .frame(width: 100, height: 100)
+            .overlay(Circle().stroke(Color.minty.opacity(0.5), lineWidth: 2))
         }
-        .frame(width: 100, height: 100)
-        .clipShape(Circle())
-        .overlay(Circle().stroke(Color.minty, lineWidth: 2))
-    }
     
     private var placeholderImage: some View {
         Image("ayl_logo_1")
             .resizable()
             .aspectRatio(contentMode: .fit)
             .padding(10)
-            .background(Color.gray.opacity(0.1))
     }
-    
+
     private var memberInfoSection: some View {
         VStack(alignment: .leading, spacing: 5) {
             nameAndSocialHeader
@@ -94,11 +96,11 @@ struct StaffCard_Previews: PreviewProvider {
     static var previews: some View {
         StaffCard(member: StaffMember(
             id: "preview_id",
-            name: "Алёна Коваленко",
+            name: "Алёна",
             position: "Исполнительный директор",
-            bio: "Алёна руководит стратегическим развитием АЮЛ, вдохновляя команду на новые достижения и поддерживая инициативы молодежи.",
+            bio: "Алёна руководит",
             photoName: "staff_photo",
-            telegramLink: "https://t.me/alena_vesna_tattoo"
+            telegramLink: "https://t.me/alena"
         ))
         .previewLayout(.sizeThatFits)
         .padding()

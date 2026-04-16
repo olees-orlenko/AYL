@@ -10,8 +10,7 @@ import SwiftUI
 struct StaffView: View {
     
     // MARK: - Properties
-    
-    //    let staffMembers = StaffMember.mockStaff
+
     @StateObject var viewModel = StaffViewModel()
     
     // MARK: - Body
@@ -33,7 +32,7 @@ struct StaffView: View {
                     } else if !viewModel.isLoading && viewModel.staffMembers.isEmpty {
                         VStack {
                             Spacer()
-                            Text("Список пуст.")
+                            Text("Список пуст")
                                 .foregroundColor(.gray)
                             Spacer()
                         }
