@@ -10,8 +10,10 @@ import SwiftUI
 struct StaffView: View {
     
     // MARK: - Properties
-
+    
     @StateObject var viewModel = StaffViewModel()
+    @State private var showingEditSheet = false
+    @State private var selectedMember: StaffMember? = nil
     
     // MARK: - Body
     
@@ -24,6 +26,10 @@ struct StaffView: View {
                             headerSection
                             ForEach(viewModel.staffMembers) { member in
                                 StaffCard(member: member)
+                                    .onTapGesture {
+                                        selectedMember = member
+                                        showingEditSheet = true
+                                    }
                             }
                         }
                         .padding(.horizontal, 25)
@@ -43,6 +49,18 @@ struct StaffView: View {
                         .progressViewStyle(CircularProgressViewStyle())
                         .scaleEffect(1.5)
                 }
+            }
+            .toolbar {
+                Button {
+                    selectedMember = nil
+                    showingEditSheet = true
+                } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.title2)
+                }
+            }
+            .sheet(isPresented: $showingEditSheet) {
+                StaffEditView(viewModel: viewModel, member: selectedMember)
             }
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {

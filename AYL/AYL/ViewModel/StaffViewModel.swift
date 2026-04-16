@@ -57,4 +57,42 @@ class StaffViewModel: ObservableObject {
     deinit {
         listener?.remove()
     }
+
+    func addMember(name: String, position: String, bio: String, photoName: String, telegramLink: String) {
+        let newMember: [String: Any] = [
+            "name": name,
+            "position": position,
+            "bio": bio,
+            "photoName": photoName,
+            "telegramLink": telegramLink
+        ]
+        db.collection("Staff").addDocument(data: newMember) { error in
+            if let error = error {
+                print("Ошибка добавления: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    func updateMember(id: String, name: String, position: String, bio: String, photoName: String, telegramLink: String) {
+        let updatedData: [String: Any] = [
+            "name": name,
+            "position": position,
+            "bio": bio,
+            "photoName": photoName,
+            "telegramLink": telegramLink
+        ]
+        db.collection("Staff").document(id).updateData(updatedData) { error in
+            if let error = error {
+                print("Ошибка обновления: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    func deleteMember(id: String) {
+        db.collection("Staff").document(id).delete() { error in
+            if let error = error {
+                print("Ошибка удаления: \(error.localizedDescription)")
+            }
+        }
+    }
 }
