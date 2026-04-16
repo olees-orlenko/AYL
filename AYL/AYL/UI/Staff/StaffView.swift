@@ -6,12 +6,14 @@
 //
 
 import SwiftUI
+import FirebaseAuth
 
 struct StaffView: View {
     
     // MARK: - Properties
     
     @StateObject var viewModel = StaffViewModel()
+    @EnvironmentObject var authManager: AuthManager
     @State private var showingEditSheet = false
     @State private var selectedMember: StaffMember? = nil
     
@@ -27,8 +29,10 @@ struct StaffView: View {
                             ForEach(viewModel.staffMembers) { member in
                                 StaffCard(member: member)
                                     .onTapGesture {
-                                        selectedMember = member
-                                        showingEditSheet = true
+                                        if authManager.isAdminLoggedIn {
+                                            selectedMember = member
+                                            showingEditSheet = true
+                                        }
                                     }
                             }
                         }
@@ -51,16 +55,25 @@ struct StaffView: View {
                 }
             }
             .toolbar {
-                Button {
-                    selectedMember = nil
-                    showingEditSheet = true
-                } label: {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.title2)
+                if authManager.isAdminLoggedIn {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button {
+                            selectedMember = nil
+                            showingEditSheet = true
+                        } label: {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.title2)
+                        }
+                    }
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button("Выйти") { authManager.signOut() }
+                    }
                 }
             }
             .sheet(isPresented: $showingEditSheet) {
                 StaffEditView(viewModel: viewModel, member: selectedMember)
+                    .environmentObject(authManager)
+                    .id(selectedMember?.id ?? "new")
             }
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {

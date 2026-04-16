@@ -15,6 +15,8 @@ struct MainView: View {
     
     private let documentsUrlString = "https://ayl.ru/dokumenty"
     @AppStorage("isDarkMode") private var isDarkMode = false
+    @State private var tapCount = 0
+    @State private var showingLogin = false
     
     // MARK: - Body
     
@@ -38,6 +40,9 @@ struct MainView: View {
                             .foregroundColor(isDarkMode ? .minty : .lightBlue)
                     }
                 }
+            }
+            .sheet(isPresented: $showingLogin) {
+                LoginView()
             }
         }
     }
@@ -65,6 +70,14 @@ struct MainView: View {
                 .frame(width: 120, height: 120)
             Spacer()
         }
+        .onTapGesture {
+            tapCount += 1
+            if tapCount == 5 {
+                showingLogin = true
+                tapCount = 0
+            }
+        }
+        
         .padding(.top, 10)
     }
     

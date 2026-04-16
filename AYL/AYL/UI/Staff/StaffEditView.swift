@@ -13,6 +13,7 @@ struct StaffEditView: View {
     
     @Environment(\.dismiss) var dismiss
     @ObservedObject var viewModel: StaffViewModel
+    @EnvironmentObject var authManager: AuthManager
     var member: StaffMember?
     @State private var name: String = ""
     @State private var position: String = ""
@@ -20,17 +21,29 @@ struct StaffEditView: View {
     @State private var photoName: String = ""
     @State private var telegramLink: String = ""
     
+    // MARK: - Init
+    
+    init(viewModel: StaffViewModel, member: StaffMember?) {
+        self.viewModel = viewModel
+        self.member = member
+        _name = State(initialValue: member?.name ?? "")
+        _position = State(initialValue: member?.position ?? "")
+        _bio = State(initialValue: member?.bio ?? "")
+        _photoName = State(initialValue: member?.photoName ?? "")
+        _telegramLink = State(initialValue: member?.telegramLink ?? "")
+    }
+    
     // MARK: - Body
     
     var body: some View {
         NavigationStack {
             Form {
-                    TextField("ФИО", text: $name)
-                    TextField("Должность", text: $position)
-                    TextField("Ссылка на фото (Direct Link)", text: $photoName)
-                    TextField("Ссылка на Telegram", text: $telegramLink)
-                    TextField("Несколько слов об АЮЛ", text: $bio)
-                if member != nil {
+                TextField("ФИО", text: $name)
+                TextField("Должность", text: $position)
+                TextField("Ссылка на фото (Direct Link)", text: $photoName)
+                TextField("Ссылка на Telegram", text: $telegramLink)
+                TextField("Несколько слов об АЮЛ", text: $bio)
+                if member != nil && authManager.isAdminLoggedIn{
                     Button(role: .destructive) {
                         if let id = member?.id {
                             viewModel.deleteMember(id: id)
@@ -52,16 +65,7 @@ struct StaffEditView: View {
                         saveAction()
                         dismiss()
                     }
-                    .disabled(name.isEmpty || position.isEmpty)
-                }
-            }
-            .onAppear {
-                if let member = member {
-                    name = member.name
-                    position = member.position
-                    bio = member.bio
-                    photoName = member.photoName
-                    telegramLink = member.telegramLink ?? ""
+                    .disabled(name.isEmpty || position.isEmpty || !authManager.isAdminLoggedIn)
                 }
             }
         }
@@ -73,7 +77,9 @@ struct StaffEditView: View {
         if let id = member?.id {
             viewModel.updateMember(id: id, name: name, position: position, bio: bio, photoName: photoName, telegramLink: telegramLink)
         } else {
-            viewModel.addMember(name: name, position: position, bio: bio, photoName: photoName, telegramLink: telegramLink)
+            if authManager.isAdminLoggedIn {
+                viewModel.addMember(name: name, position: position, bio: bio, photoName: photoName, telegramLink: telegramLink)
+            }
         }
     }
 }

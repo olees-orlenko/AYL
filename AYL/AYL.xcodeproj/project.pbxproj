@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		FC1651702F8EA4CE00C2CD4C /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = FC16516F2F8EA4CE00C2CD4C /* FirebaseAnalytics */; };
 		FC1651722F8EA4CE00C2CD4C /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = FC1651712F8EA4CE00C2CD4C /* FirebaseFirestore */; };
+		FC87C4AC2F913A06007F5887 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = FC87C4AB2F913A06007F5887 /* FirebaseAuth */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -42,6 +43,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FC1651702F8EA4CE00C2CD4C /* FirebaseAnalytics in Frameworks */,
+				FC87C4AC2F913A06007F5887 /* FirebaseAuth in Frameworks */,
 				FC1651722F8EA4CE00C2CD4C /* FirebaseFirestore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -87,6 +89,7 @@
 			packageProductDependencies = (
 				FC16516F2F8EA4CE00C2CD4C /* FirebaseAnalytics */,
 				FC1651712F8EA4CE00C2CD4C /* FirebaseFirestore */,
+				FC87C4AB2F913A06007F5887 /* FirebaseAuth */,
 			);
 			productName = AYL;
 			productReference = FC8C2AF62F7575D0000C33CA /* AYL.app */;
@@ -383,6 +386,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = FC16516E2F8EA4CE00C2CD4C /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseFirestore;
+		};
+		FC87C4AB2F913A06007F5887 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FC16516E2F8EA4CE00C2CD4C /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

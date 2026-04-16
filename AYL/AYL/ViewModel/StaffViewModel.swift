@@ -57,7 +57,7 @@ class StaffViewModel: ObservableObject {
     deinit {
         listener?.remove()
     }
-
+    
     func addMember(name: String, position: String, bio: String, photoName: String, telegramLink: String) {
         let newMember: [String: Any] = [
             "name": name,
@@ -72,7 +72,7 @@ class StaffViewModel: ObservableObject {
             }
         }
     }
-
+    
     func updateMember(id: String, name: String, position: String, bio: String, photoName: String, telegramLink: String) {
         let updatedData: [String: Any] = [
             "name": name,
@@ -87,7 +87,7 @@ class StaffViewModel: ObservableObject {
             }
         }
     }
-
+    
     func deleteMember(id: String) {
         db.collection("Staff").document(id).delete() { error in
             if let error = error {
