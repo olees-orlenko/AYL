@@ -19,7 +19,7 @@ struct GalleryView: View {
     @State private var showingAddSheet = false
     @StateObject var viewModel = GalleryViewModel()
     @EnvironmentObject var authManager: AuthManager
-    
+
     // MARK: - Body
     
     var body: some View {
@@ -29,9 +29,12 @@ struct GalleryView: View {
                     VStack(alignment: .leading, spacing: 20) {
                         headerSection
                         if viewModel.photos.isEmpty && !viewModel.isLoading {
-                            VStack(alignment: .leading, spacing: 15) {
+                            VStack {
+                                Spacer()
                                 emptySectionHeader
+                                Spacer()
                             }
+                            .frame(maxWidth: .infinity)
                         } else {
                             ForEach(viewModel.sortedTitles, id: \.self) { title in
                                 VStack(alignment: .leading, spacing: 15) {
@@ -57,42 +60,47 @@ struct GalleryView: View {
                                     }
                                 }
                             }
-                            .padding(.horizontal, 25)
-                            .padding(.top, 20)
-                            .padding(.bottom, 40)
-                        }
-                        if viewModel.isLoading {
-                            ProgressView().scaleEffect(1.5)
                         }
                     }
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        if authManager.isAdminLoggedIn {
-                            ToolbarItem(placement: .navigationBarTrailing) {
-                                Button {
-                                    showingAddSheet = true
-                                } label: {
-                                    Image(systemName: "plus.circle.fill")
-                                        .font(.title2)
-                                }
-                            }
-                            ToolbarItem(placement: .navigationBarLeading) {
-                                Button("Выйти") { authManager.signOut() }
-                            }
+                    .padding(.horizontal, 25)
+                    .padding(.top, 20)
+                    .padding(.bottom, 40)
+                }
+                if viewModel.isLoading {
+                    ProgressView()
+                        .scaleEffect(1.5)
+                }
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                if authManager.isAdminLoggedIn {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button {
+                            showingAddSheet = true
+                        } label: {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.title2)
                         }
                     }
-                    .onAppear { viewModel.fetchData() }
-                    .sheet(isPresented: $showingAddSheet) {
-                        AddGalleryPhotoView(viewModel: viewModel)
-                    }
-                    .fullScreenCover(item: $selectedPhoto) { photo in
-                        if let currentGroup = viewModel.groupedPhotos[photo.title] {
-                            FullScreenImageView(
-                                groupPhotos: currentGroup,
-                                selectedPhotoID: photo.id
-                            )
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button("Выйти") {
+                            authManager.signOut()
                         }
                     }
+                }
+            }
+            .onAppear {
+                viewModel.fetchData()
+            }
+            .sheet(isPresented: $showingAddSheet) {
+                AddGalleryPhotoView(viewModel: viewModel)
+            }
+            .fullScreenCover(item: $selectedPhoto) { photo in
+                if let currentGroup = viewModel.groupedPhotos[photo.title] {
+                    FullScreenImageView(
+                        groupPhotos: currentGroup,
+                        selectedPhotoID: photo.id
+                    )
                 }
             }
         }
@@ -117,7 +125,6 @@ struct GalleryView: View {
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundColor(.gray)
         }
-        .padding(.top, 10)
     }
     
     private func sectionHeader(title: String) -> some View {
@@ -126,7 +133,6 @@ struct GalleryView: View {
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundColor(.primary)
         }
-        .padding(.top, 10)
     }
     
     private func galleryCard(_ photo: GalleryItem) -> some View {
