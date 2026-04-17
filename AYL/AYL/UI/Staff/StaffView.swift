@@ -23,9 +23,14 @@ struct StaffView: View {
         NavigationStack {
             ZStack {
                 ScrollView {
-                    if !viewModel.isLoading && !viewModel.staffMembers.isEmpty {
-                        VStack(alignment: .leading, spacing: 20) {
-                            headerSection
+                    VStack(alignment: .leading, spacing: 20) {
+                        headerSection
+                        if viewModel.isLoading {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle())
+                                .scaleEffect(1.5)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        } else if !viewModel.staffMembers.isEmpty {
                             ForEach(viewModel.staffMembers) { member in
                                 StaffCard(member: member)
                                     .onTapGesture {
@@ -35,24 +40,18 @@ struct StaffView: View {
                                         }
                                     }
                             }
-                        }
-                        .padding(.horizontal, 25)
-                        .padding(.top, 20)
-                        .padding(.bottom, 40)
-                    } else if !viewModel.isLoading && viewModel.staffMembers.isEmpty {
-                        VStack {
-                            Spacer()
-                            Text("Список пуст")
-                                .foregroundColor(.gray)
-                                .padding(.top, 10)
-                            Spacer()
+                        } else {
+                            VStack {
+                                Spacer()
+                                emptySectionHeader
+                                Spacer()
+                            }
+                            .frame(maxWidth: .infinity)
                         }
                     }
-                }
-                if viewModel.isLoading {
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle())
-                        .scaleEffect(1.5)
+                    .padding(.horizontal, 25)
+                    .padding(.top, 20)
+                    .padding(.bottom, 40)
                 }
             }
             .toolbar {
@@ -67,7 +66,9 @@ struct StaffView: View {
                         }
                     }
                     ToolbarItem(placement: .navigationBarLeading) {
-                        Button("Выйти") { authManager.signOut() }
+                        Button("Выйти") {
+                            authManager.signOut()
+                        }
                     }
                 }
             }
@@ -94,6 +95,12 @@ struct StaffView: View {
                 .foregroundColor(.violet)
         }
         .padding(.top, 10)
+    }
+    
+    private var emptySectionHeader: some View {
+        Text("Список пуст")
+            .font(.system(size: 14, weight: .semibold))
+            .foregroundColor(.gray)
     }
 }
 
