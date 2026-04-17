@@ -44,6 +44,7 @@ struct StaffView: View {
                             Spacer()
                             Text("Список пуст")
                                 .foregroundColor(.gray)
+                                .padding(.top, 10)
                             Spacer()
                         }
                     }

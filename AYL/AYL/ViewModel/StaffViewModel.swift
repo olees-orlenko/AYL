@@ -26,6 +26,8 @@ class StaffViewModel: ObservableObject {
         db.settings = settings
     }
     
+    // MARK: - Data Fetching
+    
     func fetchData() {
         if staffMembers.isEmpty {
             isLoading = true
@@ -57,6 +59,8 @@ class StaffViewModel: ObservableObject {
     deinit {
         listener?.remove()
     }
+    
+    // MARK: - Admin Actions (Add/Update/Delete)
     
     func addMember(name: String, position: String, bio: String, photoName: String, telegramLink: String) {
         let newMember: [String: Any] = [

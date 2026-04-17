@@ -36,20 +36,44 @@ struct ZoomableImagePage: View {
     // MARK: - Subviews
     
     private var imageLayer: some View {
-        Group {
-            if let uiImage = UIImage(named: photo.imageName) {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .scaledToFit()
+        let urlString = photo.imageName.trimmingCharacters(in: .whitespacesAndNewlines)
+        return Group {
+            if let url = URL(string: urlString) {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                    case .failure(let error):
+                        let _ = print("Ошибка загрузки: \(error.localizedDescription) для \(urlString)")
+                        placeholderView
+                    case .empty:
+                        placeholderView
+                    @unknown default:
+                        placeholderView
+                    }
+                }
+                .id(photo.id)
             } else {
-                Image("ayl_logo_1")
-                    .resizable()
-                    .scaledToFit()
-                    .padding(80)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color.white)
+                placeholderView
             }
         }
+    }
+    
+    private var placeholderView: some View {
+        ZStack {
+            Color.white
+            ProgressView()
+                .scaleEffect(1.5)
+                .offset(y: -40)
+            Image("ayl_logo_1")
+                .resizable()
+                .scaledToFit()
+                .padding(100)
+                .opacity(0.3)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     
     // MARK: - Gestures

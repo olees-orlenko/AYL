@@ -11,57 +11,88 @@ struct GalleryView: View {
     
     // MARK: - Properties
     
-    private var groupedPhotos: [String: [GalleryItem]] {
-        Dictionary(grouping: GalleryItem.mockPhotos, by: { $0.title })
-    }
-    private var sortedTitles: [String] {
-        groupedPhotos.keys.sorted()
-    }
     let columns = [
         GridItem(.flexible(), spacing: 15),
         GridItem(.flexible(), spacing: 15)
     ]
     @State private var selectedPhoto: GalleryItem? = nil
+    @State private var showingAddSheet = false
+    @StateObject var viewModel = GalleryViewModel()
+    @EnvironmentObject var authManager: AuthManager
     
     // MARK: - Body
     
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    headerSection
-                    ForEach(sortedTitles, id: \.self) { title in
-                        VStack(alignment: .leading, spacing: 15) {
-                            sectionHeader(title: title)
-                            LazyVGrid(columns: columns, spacing: 15) {
-                                if let photosInGroup = groupedPhotos[title] {
-                                    ForEach(photosInGroup) { photo in
-                                        galleryCard(photo)
-                                            .onTapGesture {
-                                                selectedPhoto = photo
+            ZStack {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 20) {
+                        headerSection
+                        if viewModel.photos.isEmpty && !viewModel.isLoading {
+                            VStack(alignment: .leading, spacing: 15) {
+                                emptySectionHeader
+                            }
+                        } else {
+                            ForEach(viewModel.sortedTitles, id: \.self) { title in
+                                VStack(alignment: .leading, spacing: 15) {
+                                    sectionHeader(title: title)
+                                    LazyVGrid(columns: columns, spacing: 15) {
+                                        if let photosInGroup = viewModel.groupedPhotos[title] {
+                                            ForEach(photosInGroup) { photo in
+                                                galleryCard(photo)
+                                                    .onTapGesture {
+                                                        selectedPhoto = photo
+                                                    }
+                                                    .contextMenu {
+                                                        if authManager.isAdminLoggedIn {
+                                                            Button(role: .destructive) {
+                                                                viewModel.deletePhoto(id: photo.id)
+                                                            } label: {
+                                                                Label("Удалить", systemImage: "trash")
+                                                            }
+                                                        }
+                                                    }
                                             }
+                                        }
                                     }
                                 }
                             }
+                            .padding(.horizontal, 25)
+                            .padding(.top, 20)
+                            .padding(.bottom, 40)
+                        }
+                        if viewModel.isLoading {
+                            ProgressView().scaleEffect(1.5)
                         }
                     }
-                }
-                .padding(.horizontal, 25)
-                .padding(.top, 20)
-                .padding(.bottom, 40)
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .fullScreenCover(item: $selectedPhoto) { photo in
-                if let currentGroup = groupedPhotos[photo.title] {
-                    FullScreenImageView(
-                        groupPhotos: currentGroup,
-                        selectedPhotoID: photo.id
-                    )
-                } else {
-                    FullScreenImageView(
-                        groupPhotos: [photo],
-                        selectedPhotoID: photo.id
-                    )
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        if authManager.isAdminLoggedIn {
+                            ToolbarItem(placement: .navigationBarTrailing) {
+                                Button {
+                                    showingAddSheet = true
+                                } label: {
+                                    Image(systemName: "plus.circle.fill")
+                                        .font(.title2)
+                                }
+                            }
+                            ToolbarItem(placement: .navigationBarLeading) {
+                                Button("Выйти") { authManager.signOut() }
+                            }
+                        }
+                    }
+                    .onAppear { viewModel.fetchData() }
+                    .sheet(isPresented: $showingAddSheet) {
+                        AddGalleryPhotoView(viewModel: viewModel)
+                    }
+                    .fullScreenCover(item: $selectedPhoto) { photo in
+                        if let currentGroup = viewModel.groupedPhotos[photo.title] {
+                            FullScreenImageView(
+                                groupPhotos: currentGroup,
+                                selectedPhotoID: photo.id
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -80,36 +111,65 @@ struct GalleryView: View {
         .padding(.top, 10)
     }
     
+    private var emptySectionHeader: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("В галерее пока нет фото")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(.gray)
+        }
+        .padding(.top, 10)
+    }
+    
     private func sectionHeader(title: String) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundColor(.primary)
         }
+        .padding(.top, 10)
     }
     
     private func galleryCard(_ photo: GalleryItem) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Group {
-                if let uiImage = UIImage(named: photo.imageName) {
-                    Image(uiImage: uiImage)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } else {
-                    Image("ayl_logo_1")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 120, height: 120)
-                        .background(Color.white)
+        ZStack {
+            let urlString = photo.imageName.trimmingCharacters(in: .whitespacesAndNewlines)
+            return ZStack {
+                AsyncImage(url: URL(string: urlString)) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(height: 120)
+                            .frame(minWidth: 0, maxWidth: .infinity)
+                            .clipped()
+                    case .failure(let error):
+                        let _ = print("Ошибка загрузки фото: \(error.localizedDescription) для URL: \(photo.imageName)")
+                        placeholderView
+                    case .empty:
+                        placeholderView
+                    @unknown default:
+                        placeholderView
+                    }
                 }
             }
-            .frame(minWidth: 0, maxWidth: .infinity)
-            .frame(height: 180)
+            .frame(height: 120)
             .background(Color.white)
-            .clipped()
             .cornerRadius(15)
+            .clipped()
             .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 5)
         }
+    }
+    
+    private var placeholderView: some View {
+        ZStack {
+            Image("ayl_logo_1")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 120, height: 120)
+                .background(Color.white)
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: 120)
     }
 }
 
