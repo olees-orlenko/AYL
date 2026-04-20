@@ -15,6 +15,7 @@ struct StaffView: View {
     @StateObject var viewModel = StaffViewModel()
     @EnvironmentObject var authManager: AuthManager
     @State private var showingEditSheet = false
+    @State private var showingAddSheet = false
     @State private var selectedMember: StaffMember? = nil
     
     // MARK: - Body
@@ -33,10 +34,19 @@ struct StaffView: View {
                         } else if !viewModel.staffMembers.isEmpty {
                             ForEach(viewModel.staffMembers) { member in
                                 StaffCard(member: member)
-                                    .onTapGesture {
+                                    .contextMenu {
                                         if authManager.isAdminLoggedIn {
-                                            selectedMember = member
-                                            showingEditSheet = true
+                                            Button {
+                                                selectedMember = member
+                                                showingEditSheet = true
+                                            } label: {
+                                                Label("Редактировать", systemImage: "pencil")
+                                            }
+                                            Button(role: .destructive) {
+                                                viewModel.deleteMember(id: member.id)
+                                            } label: {
+                                                Label("Удалить", systemImage: "trash")
+                                            }
                                         }
                                     }
                             }
@@ -59,7 +69,7 @@ struct StaffView: View {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button {
                             selectedMember = nil
-                            showingEditSheet = true
+                            showingAddSheet = true
                         } label: {
                             Image(systemName: "plus.circle.fill")
                                 .font(.title2)
@@ -72,10 +82,14 @@ struct StaffView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showingEditSheet) {
-                StaffEditView(viewModel: viewModel, member: selectedMember)
+            .sheet(item: $selectedMember) { member in
+                StaffEditView(viewModel: viewModel, member: member)
                     .environmentObject(authManager)
-                    .id(selectedMember?.id ?? "new")
+            }
+            
+            .sheet(isPresented: $showingAddSheet) {
+                StaffEditView(viewModel: viewModel, member: nil)
+                    .environmentObject(authManager)
             }
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {

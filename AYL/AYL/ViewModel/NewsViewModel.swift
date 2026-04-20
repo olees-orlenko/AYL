@@ -69,6 +69,19 @@ class NewsViewModel: ObservableObject {
         }
     }
     
+    func updateNews(id: String, title: String, content: String, imageUrl: String, linkUrl: String) {
+        db.collection("News").document(id).updateData([
+            "title": title,
+            "content": content,
+            "imageUrl": imageUrl,
+            "linkUrl": linkUrl,
+        ]) { error in
+            if let error = error {
+                print("Ошибка при обновлении новости: \(error.localizedDescription)")
+            }
+        }
+    }
+    
     func deleteNews(id: String) {
         db.collection("News").document(id).delete() { error in
             if let error = error {

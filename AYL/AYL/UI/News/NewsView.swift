@@ -14,6 +14,7 @@ struct NewsView: View {
     @StateObject var viewModel = NewsViewModel()
     @EnvironmentObject var authManager: AuthManager
     @State private var showingAddSheet = false
+    @State private var selectedNews: NewsItem? = nil
     
     // MARK: - Body
     
@@ -55,6 +56,9 @@ struct NewsView: View {
                 AddNewsView(viewModel: viewModel)
             }
             .onAppear { viewModel.fetchData() }
+            .sheet(item: $selectedNews) { news in
+                EditNewsView(viewModel: viewModel, newsItem: news)
+            }
         }
     }
     
@@ -75,17 +79,22 @@ struct NewsView: View {
         ForEach(viewModel.news) { item in
             NavigationLink(destination: NewsDetailView(news: item)) {
                 NewsCard(news: item)
-                    .contextMenu {
-                        if authManager.isAdminLoggedIn {
-                            Button(role: .destructive) {
-                                viewModel.deleteNews(id: item.id)
-                            } label: {
-                                Label("Удалить", systemImage: "trash")
-                            }
-                        }
-                    }
             }
             .buttonStyle(PlainButtonStyle())
+            .contextMenu {
+                if authManager.isAdminLoggedIn {
+                    Button {
+                        selectedNews = item
+                    } label: {
+                        Label("Редактировать", systemImage: "pencil")
+                    }
+                    Button(role: .destructive) {
+                        viewModel.deleteNews(id: item.id)
+                    } label: {
+                        Label("Удалить", systemImage: "trash")
+                    }
+                }
+            }
         }
     }
     

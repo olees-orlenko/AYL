@@ -27,17 +27,40 @@ struct AddNewsView: View {
         NavigationStack {
             Form {
                 Section(header: Text("Основная информация")) {
-                    TextField("Заголовок новости", text: $title)
-                    TextField("Ссылка на изображение", text: $imageUrl)
-                        .autocapitalization(.none)
-                        .disableAutocorrection(true)
-                    TextField("Ссылка на источник (подробнее)", text: $linkUrl)
-                        .autocapitalization(.none)
-                        .disableAutocorrection(true)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Заголовок новости")
+                            .font(.caption)
+                            .foregroundColor(.violet)
+                        TextField("Введите название...", text: $title)
+                    }
+                    .padding(.vertical, 2)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Ссылка на изображение")
+                            .font(.caption)
+                            .foregroundColor(.violet)
+                        TextField("https://...", text: $imageUrl)
+                            .autocapitalization(.none)
+                            .disableAutocorrection(true)
+                    }
+                    .padding(.vertical, 2)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Ссылка на источник (подробнее)")
+                            .font(.caption)
+                            .foregroundColor(.violet)
+                        TextField("https://...", text: $linkUrl)
+                            .autocapitalization(.none)
+                            .disableAutocorrection(true)
+                    }
+                    .padding(.vertical, 2)
                 }
                 Section(header: Text("Текст новости")) {
-                    TextEditor(text: $content)
-                        .frame(minHeight: 200)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Основное содержание")
+                            .font(.caption)
+                            .foregroundColor(.violet)
+                        TextEditor(text: $content)
+                            .frame(minHeight: 200)
+                    }
                 }
                 if !imageUrl.isEmpty {
                     Section(header: Text("Предпросмотр фото")) {
