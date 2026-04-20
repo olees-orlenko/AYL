@@ -19,7 +19,7 @@ struct GalleryView: View {
     @State private var showingAddSheet = false
     @StateObject var viewModel = GalleryViewModel()
     @EnvironmentObject var authManager: AuthManager
-
+    
     // MARK: - Body
     
     var body: some View {
@@ -145,8 +145,8 @@ struct GalleryView: View {
                         image
                             .resizable()
                             .aspectRatio(contentMode: .fill)
-                            .frame(height: 120)
                             .frame(minWidth: 0, maxWidth: .infinity)
+                            .frame(height: 180)
                             .clipped()
                     case .failure(let error):
                         let _ = print("Ошибка загрузки фото: \(error.localizedDescription) для URL: \(photo.imageName)")
@@ -158,11 +158,11 @@ struct GalleryView: View {
                     }
                 }
             }
-            .frame(height: 120)
+            .frame(height: 180)
+            .frame(maxWidth: .infinity)
             .background(Color.white)
             .cornerRadius(15)
-            .clipped()
-            .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 5)
+            .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 3)
         }
     }
     
@@ -175,7 +175,7 @@ struct GalleryView: View {
                 .background(Color.white)
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 120)
+        .frame(height: 180)
     }
 }
 
