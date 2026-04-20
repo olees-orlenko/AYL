@@ -38,7 +38,7 @@ struct AddGalleryPhotoView: View {
                     Button("Отмена") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Добавить") {
+                    Button("Сохранить") {
                         savePhotos()
                     }
                     .disabled(title.isEmpty || imageUrlsText.isEmpty)
