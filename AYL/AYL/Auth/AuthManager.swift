@@ -14,8 +14,10 @@ class AuthManager: ObservableObject {
     private var handler: AuthStateDidChangeListenerHandle?
     
     init() {
-        handler = Auth.auth().addStateDidChangeListener { _, user in
-            self.isAdminLoggedIn = (user != nil)
+        DispatchQueue.main.async {
+            self.handler = Auth.auth().addStateDidChangeListener { _, user in
+                self.isAdminLoggedIn = (user != nil)
+            }
         }
     }
     

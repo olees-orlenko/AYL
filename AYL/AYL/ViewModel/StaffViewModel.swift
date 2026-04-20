@@ -17,15 +17,7 @@ class StaffViewModel: ObservableObject {
     @Published var isLoading = true
     private var db = Firestore.firestore()
     private var listener: ListenerRegistration?
-    
-    // MARK: - Init
-    
-    init() {
-        let settings = db.settings
-        settings.cacheSettings = PersistentCacheSettings()
-        db.settings = settings
-    }
-    
+
     // MARK: - Data Fetching
     
     func fetchData() {
