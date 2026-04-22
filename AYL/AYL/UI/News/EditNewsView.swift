@@ -112,7 +112,7 @@ struct EditNewsView: View {
                             .font(.caption)
                             .foregroundColor(.violet)
                         TextField("Введите название...", text: $title)
-                            .onChange(of: title) { validateForm() }
+                            .onChangeCompat(of: title) { validateForm() }
                     }
                     .padding(.vertical, 2)
                     VStack(alignment: .leading, spacing: 4) {
@@ -122,7 +122,7 @@ struct EditNewsView: View {
                         TextField("https://...", text: $imageUrl)
                             .autocapitalization(.none)
                             .disableAutocorrection(true)
-                            .onChange(of: imageUrl) { validateForm() }
+                            .onChangeCompat(of: imageUrl) { validateForm() }
                     }
                     .padding(.vertical, 2)
                     VStack(alignment: .leading, spacing: 4) {
@@ -132,7 +132,7 @@ struct EditNewsView: View {
                         TextField("https://...", text: $linkUrl)
                             .autocapitalization(.none)
                             .disableAutocorrection(true)
-                            .onChange(of: linkUrl) { validateForm() }
+                            .onChangeCompat(of: linkUrl) { validateForm() }
                     }
                     .padding(.vertical, 2)
                 }
@@ -142,7 +142,7 @@ struct EditNewsView: View {
                 Section(header: Text("Текст новости")) {
                     TextEditor(text: $content)
                         .frame(minHeight: 200)
-                        .onChange(of: content) { validateForm() }
+                        .onChangeCompat(of: content) { validateForm() }
                     
                     if let contentError = contentError { Text(contentError).font(.caption).foregroundColor(.red) }
                 }
@@ -184,6 +184,17 @@ struct EditNewsView: View {
         }
         .onAppear {
             validateForm()
+        }
+    }
+}
+
+extension View {
+    @ViewBuilder
+    func onChangeCompat<T: Equatable>(of value: T, perform action: @escaping () -> Void) -> some View {
+        if #available(iOS 17.0, *) {
+            self.onChange(of: value) { action() }
+        } else {
+            self.onChange(of: value) { _ in action() }
         }
     }
 }
