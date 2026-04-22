@@ -25,36 +25,42 @@ struct GalleryView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 20) {
-                        headerSection
-                        if viewModel.photos.isEmpty && !viewModel.isLoading {
-                            VStack {
-                                Spacer()
-                                emptySectionHeader
-                                Spacer()
-                            }
-                            .frame(maxWidth: .infinity)
-                        } else {
-                            ForEach(viewModel.sortedTitles, id: \.self) { title in
-                                VStack(alignment: .leading, spacing: 15) {
-                                    sectionHeader(title: title)
-                                    LazyVGrid(columns: columns, spacing: 15) {
-                                        if let photosInGroup = viewModel.groupedPhotos[title] {
-                                            ForEach(photosInGroup) { photo in
-                                                galleryCard(photo)
-                                                    .onTapGesture {
-                                                        selectedPhoto = photo
-                                                    }
-                                                    .contextMenu {
-                                                        if authManager.isAdminLoggedIn {
-                                                            Button(role: .destructive) {
-                                                                viewModel.deletePhoto(id: photo.id)
-                                                            } label: {
-                                                                Label("Удалить", systemImage: "trash")
+                Color.clear
+                if viewModel.isLoading {
+                    ProgressView()
+                        .scaleEffect(1.5)
+                } else {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 20) {
+                            headerSection
+                            if viewModel.photos.isEmpty && !viewModel.isLoading {
+                                VStack {
+                                    Spacer()
+                                    emptySectionHeader
+                                    Spacer()
+                                }
+                                .frame(maxWidth: .infinity)
+                            } else {
+                                ForEach(viewModel.sortedTitles, id: \.self) { title in
+                                    VStack(alignment: .leading, spacing: 15) {
+                                        sectionHeader(title: title)
+                                        LazyVGrid(columns: columns, spacing: 15) {
+                                            if let photosInGroup = viewModel.groupedPhotos[title] {
+                                                ForEach(photosInGroup) { photo in
+                                                    galleryCard(photo)
+                                                        .onTapGesture {
+                                                            selectedPhoto = photo
+                                                        }
+                                                        .contextMenu {
+                                                            if authManager.isAdminLoggedIn {
+                                                                Button(role: .destructive) {
+                                                                    viewModel.deletePhoto(id: photo.id)
+                                                                } label: {
+                                                                    Label("Удалить", systemImage: "trash")
+                                                                }
                                                             }
                                                         }
-                                                    }
+                                                }
                                             }
                                         }
                                     }
