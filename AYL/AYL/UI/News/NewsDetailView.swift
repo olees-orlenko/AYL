@@ -13,7 +13,7 @@ struct NewsDetailView: View {
     
     let news: NewsItem
     @Environment(\.dismiss) var dismiss
-
+    
     // MARK: - Body
     
     var body: some View {
@@ -34,6 +34,8 @@ struct NewsDetailView: View {
         }
         .ignoresSafeArea(edges: .top)
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbar { toolbarContent }
     }
     
     // MARK: - Subviews
@@ -119,6 +121,15 @@ struct NewsDetailView: View {
             .buttonStyle(PlainButtonStyle())
         }
         .padding(.top, 10)
+    }
+    
+    private var toolbarContent: some ToolbarContent {
+        ToolbarItem(placement: .navigationBarLeading) {
+            Button { dismiss() } label: {
+                Image(systemName: "chevron.left")
+                    .foregroundColor(.primary)
+            }
+        }
     }
 }
 

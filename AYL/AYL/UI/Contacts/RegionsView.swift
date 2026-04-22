@@ -82,6 +82,7 @@ struct RegionsView: View {
         ToolbarItem(placement: .navigationBarLeading) {
             Button { dismiss() } label: {
                 Image(systemName: "chevron.left")
+                    .foregroundColor(.primary)
             }
         }
     }
