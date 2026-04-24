@@ -67,10 +67,10 @@ struct GalleryView: View {
                                 }
                             }
                         }
+                        .padding(.horizontal, 25)
+                        .padding(.top, 20)
+                        .padding(.bottom, 40)
                     }
-                    .padding(.horizontal, 25)
-                    .padding(.top, 20)
-                    .padding(.bottom, 40)
                 }
                 if viewModel.isLoading {
                     ProgressView()
@@ -166,7 +166,7 @@ struct GalleryView: View {
             }
             .frame(height: 180)
             .frame(maxWidth: .infinity)
-            .background(Color.white)
+            .background(Color(UIColor.secondarySystemGroupedBackground))
             .cornerRadius(15)
             .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 3)
         }
@@ -178,7 +178,6 @@ struct GalleryView: View {
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 120, height: 120)
-                .background(Color.white)
         }
         .frame(maxWidth: .infinity)
         .frame(height: 180)

@@ -63,7 +63,6 @@ struct ZoomableImagePage: View {
     
     private var placeholderView: some View {
         ZStack {
-            Color.white
             ProgressView()
                 .scaleEffect(1.5)
                 .offset(y: -40)

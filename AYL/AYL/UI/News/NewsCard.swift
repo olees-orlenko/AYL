@@ -22,9 +22,9 @@ struct NewsCard: View {
             footerSection
         }
         .padding(12)
-        .background(Color.white)
+        .background(Color(UIColor.secondarySystemGroupedBackground))
         .cornerRadius(20)
-        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 4)
+        .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 3)
     }
     
     // MARK: - Subviews
@@ -52,7 +52,6 @@ struct NewsCard: View {
             Image("ayl_logo_1")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .background(Color.white)
         }
         .frame(maxWidth: .infinity)
         .frame(height: 200)
@@ -64,7 +63,7 @@ struct NewsCard: View {
                 .font(.headline)
                 .fontWeight(.bold)
                 .lineLimit(2)
-                .foregroundColor(.black)
+                .foregroundColor(.primary)
             Text(news.content)
                 .font(.subheadline)
                 .foregroundColor(.gray)

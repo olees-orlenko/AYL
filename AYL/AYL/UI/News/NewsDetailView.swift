@@ -62,10 +62,10 @@ struct NewsDetailView: View {
             Image("ayl_logo_1")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .background(Color.white)
         }
         .frame(maxWidth: .infinity)
         .frame(height: 250)
+        .padding(.top, 60)
     }
     
     private var titleSection: some View {
