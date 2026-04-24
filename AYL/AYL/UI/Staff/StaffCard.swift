@@ -42,7 +42,7 @@ struct StaffCard: View {
                 }
             }
             .frame(width: 100, height: 100)
-            .overlay(Circle().stroke(Color.minty.opacity(0.5), lineWidth: 2))
+            .overlay(Circle().inset(by: 1).stroke(Color.minty.opacity(0.5), lineWidth: 2))
         }
     
     private var placeholderImage: some View {
