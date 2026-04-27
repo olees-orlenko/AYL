@@ -26,42 +26,46 @@ struct StaffView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 20) {
                         headerSection
-                        if viewModel.isLoading {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle())
-                                .scaleEffect(1.5)
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        } else if !viewModel.staffMembers.isEmpty {
-                            ForEach(viewModel.staffMembers) { member in
-                                StaffCard(member: member)
-                                    .contextMenu {
-                                        if authManager.isAdminLoggedIn {
-                                            Button {
-                                                selectedMember = member
-                                                showingEditSheet = true
-                                            } label: {
-                                                Label("Редактировать", systemImage: "pencil")
-                                            }
-                                            Button(role: .destructive) {
-                                                viewModel.deleteMember(id: member.id)
-                                            } label: {
-                                                Label("Удалить", systemImage: "trash")
+                        if !viewModel.isLoading {
+                            if !viewModel.staffMembers.isEmpty {
+                                ForEach(viewModel.staffMembers) { member in
+                                    StaffCard(member: member)
+                                        .contextMenu {
+                                            if authManager.isAdminLoggedIn {
+                                                Button {
+                                                    selectedMember = member
+                                                    showingEditSheet = true
+                                                } label: {
+                                                    Label("Редактировать", systemImage: "pencil")
+                                                }
+                                                Button(role: .destructive) {
+                                                    viewModel.deleteMember(id: member.id)
+                                                } label: {
+                                                    Label("Удалить", systemImage: "trash")
+                                                }
                                             }
                                         }
-                                    }
+                                }
+                            } else {
+                                VStack {
+                                    Spacer()
+                                    emptySectionHeader
+                                    Spacer()
+                                }
+                                .frame(maxWidth: .infinity)
                             }
-                        } else {
-                            VStack {
-                                Spacer()
-                                emptySectionHeader
-                                Spacer()
-                            }
-                            .frame(maxWidth: .infinity)
                         }
                     }
                     .padding(.horizontal, 25)
                     .padding(.top, 20)
                     .padding(.bottom, 40)
+                }
+                
+                if viewModel.isLoading {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle())
+                        .scaleEffect(1.5)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
             .toolbar {
@@ -86,7 +90,6 @@ struct StaffView: View {
                 StaffEditView(viewModel: viewModel, member: member)
                     .environmentObject(authManager)
             }
-            
             .sheet(isPresented: $showingAddSheet) {
                 StaffEditView(viewModel: viewModel, member: nil)
                     .environmentObject(authManager)

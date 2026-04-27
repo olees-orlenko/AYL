@@ -30,6 +30,7 @@ struct GalleryView: View {
                 if viewModel.isLoading {
                     ProgressView()
                         .scaleEffect(1.5)
+                        .progressViewStyle(CircularProgressViewStyle())
                 } else {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 20) {
