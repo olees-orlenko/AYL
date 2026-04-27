@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Kingfisher
 
 struct GalleryView: View {
     
@@ -142,34 +143,21 @@ struct GalleryView: View {
     }
     
     private func galleryCard(_ photo: GalleryItem) -> some View {
-        ZStack {
-            let urlString = photo.imageName.trimmingCharacters(in: .whitespacesAndNewlines)
-            return ZStack {
-                AsyncImage(url: URL(string: urlString)) { phase in
-                    switch phase {
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(minWidth: 0, maxWidth: .infinity)
-                            .frame(height: 180)
-                            .clipped()
-                    case .failure(let error):
-                        let _ = print("Ошибка загрузки фото: \(error.localizedDescription) для URL: \(photo.imageName)")
-                        placeholderView
-                    case .empty:
-                        placeholderView
-                    @unknown default:
-                        placeholderView
-                    }
-                }
+        let urlString = photo.imageName.trimmingCharacters(in: .whitespacesAndNewlines)
+        return KFImage(URL(string: urlString))
+            .placeholder {
+                placeholderView
             }
+            .retry(maxCount: 3, interval: .seconds(5))
+            .cacheMemoryOnly(false)
+            .resizable()
+            .aspectRatio(contentMode: .fill)
             .frame(height: 180)
-            .frame(maxWidth: .infinity)
+            .frame(minWidth: 0, maxWidth: .infinity)
+            .clipped()
             .background(Color(UIColor.secondarySystemGroupedBackground))
             .cornerRadius(15)
             .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 3)
-        }
     }
     
     private var placeholderView: some View {

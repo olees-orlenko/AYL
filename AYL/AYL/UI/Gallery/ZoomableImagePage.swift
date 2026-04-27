@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Kingfisher
 
 struct ZoomableImagePage: View {
     
@@ -39,22 +40,16 @@ struct ZoomableImagePage: View {
         let urlString = photo.imageName.trimmingCharacters(in: .whitespacesAndNewlines)
         return Group {
             if let url = URL(string: urlString) {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                    case .failure(let error):
-                        let _ = print("Ошибка загрузки: \(error.localizedDescription) для \(urlString)")
-                        placeholderView
-                    case .empty:
-                        placeholderView
-                    @unknown default:
+                KFImage(url)
+                    .placeholder {
                         placeholderView
                     }
-                }
-                .id(photo.id)
+                    .onFailure { error in
+                        print("Ошибка загрузки: \(error.localizedDescription) для \(urlString)")
+                    }
+                    .fade(duration: 0.3)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
             } else {
                 placeholderView
             }

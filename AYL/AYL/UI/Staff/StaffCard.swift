@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Kingfisher
 
 struct StaffCard: View {
     
@@ -26,24 +27,19 @@ struct StaffCard: View {
     }
     
     // MARK: - Subviews
-
+    
     private var memberImage: some View {
-            AsyncImage(url: URL(string: member.photoName)) { phase in
-                switch phase {
-                case .success(let image):
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .clipShape(Circle())
-                case .failure, .empty:
-                    placeholderImage
-                @unknown default:
-                    placeholderImage
-                }
+        KFImage(URL(string: member.photoName))
+            .placeholder {
+                placeholderImage
             }
+            .fade(duration: 0.3)
+            .resizable()
+            .aspectRatio(contentMode: .fill)
             .frame(width: 100, height: 100)
+            .clipShape(Circle())
             .overlay(Circle().inset(by: 1).stroke(Color.minty.opacity(0.5), lineWidth: 2))
-        }
+    }
     
     private var placeholderImage: some View {
         Image("ayl_logo_1")
@@ -51,7 +47,7 @@ struct StaffCard: View {
             .aspectRatio(contentMode: .fit)
             .padding(10)
     }
-
+    
     private var memberInfoSection: some View {
         VStack(alignment: .leading, spacing: 5) {
             nameAndSocialHeader

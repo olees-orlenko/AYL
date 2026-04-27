@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Kingfisher
 
 struct AddNewsView: View {
     
@@ -64,20 +65,17 @@ struct AddNewsView: View {
                 }
                 if !imageUrl.isEmpty {
                     Section(header: Text("Предпросмотр фото")) {
-                        AsyncImage(url: URL(string: imageUrl.trimmingCharacters(in: .whitespacesAndNewlines))) { phase in
-                            if let image = phase.image {
-                                image
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                                    .frame(height: 150)
-                                    .cornerRadius(10)
-                                    .clipped()
-                            } else {
+                        KFImage(URL(string: imageUrl.trimmingCharacters(in: .whitespacesAndNewlines)))
+                            .placeholder {
                                 Text("Загрузка фото или неверная ссылка...")
                                     .font(.caption)
                                     .foregroundColor(.gray)
                             }
-                        }
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(height: 150)
+                            .cornerRadius(10)
+                            .clipped()
                     }
                 }
             }

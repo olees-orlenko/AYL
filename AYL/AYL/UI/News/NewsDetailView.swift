@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Kingfisher
 
 struct NewsDetailView: View {
     
@@ -41,20 +42,15 @@ struct NewsDetailView: View {
     // MARK: - Subviews
     
     private var headerImage: some View {
-        AsyncImage(url: URL(string: news.imageUrl)) { phase in
-            switch phase {
-            case .success(let image):
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(maxWidth: UIScreen.main.bounds.width)
-                    .clipped()
-            case .failure(_), .empty:
-                placeholderView
-            @unknown default:
+        KFImage(URL(string: news.imageUrl))
+            .placeholder {
                 placeholderView
             }
-        }
+            .fade(duration: 0.3)
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+            .frame(maxWidth: UIScreen.main.bounds.width)
+            .clipped()
     }
     
     private var placeholderView: some View {

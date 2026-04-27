@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Kingfisher
 
 struct NewsCard: View {
     
@@ -30,21 +31,16 @@ struct NewsCard: View {
     // MARK: - Subviews
     
     private var imageSection: some View {
-        AsyncImage(url: URL(string: news.imageUrl)) { phase in
-            switch phase {
-            case .success(let image):
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(height: 200)
-                    .clipped()
-            case .failure(_), .empty:
-                placeholderView
-            @unknown default:
+        KFImage(URL(string: news.imageUrl))
+            .placeholder {
                 placeholderView
             }
-        }
-        .cornerRadius(15)
+            .fade(duration: 0.3)
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+            .frame(height: 200)
+            .clipped()
+            .cornerRadius(15)
     }
     
     private var placeholderView: some View {
