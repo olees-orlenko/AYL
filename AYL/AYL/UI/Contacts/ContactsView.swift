@@ -130,26 +130,39 @@ struct ContactsView: View {
     
     // MARK: - Helpers
     
+    @ViewBuilder
     private func socialCircleButton(systemIcon: String? = nil, imageName: String? = nil, url: String) -> some View {
-        Link(destination: URL(string: url)!) {
-            ZStack {
-                Circle()
-                    .frame(width: 40, height: 40)
-                    .foregroundColor(.lightBlue)
-                if let systemIcon = systemIcon {
-                    Image(systemName: systemIcon)
-                        .resizable()
-                        .scaledToFit()
-                        .foregroundColor(.white)
-                        .frame(width: 20, height: 20)
-                } else if let imageName = imageName {
-                    Image(imageName)
-                        .resizable()
-                        .scaledToFit()
-                        .foregroundColor(.white)
-                        .frame(width: 32, height: 32)
+        if let validURL = URL(string: url.trimmingCharacters(in: .whitespacesAndNewlines)) {
+            Link(destination: validURL) {
+                ZStack {
+                    Circle()
+                        .frame(width: 40, height: 40)
+                        .foregroundColor(.lightBlue)
+                    if let systemIcon = systemIcon {
+                        Image(systemName: systemIcon)
+                            .resizable()
+                            .scaledToFit()
+                            .foregroundColor(.white)
+                            .frame(width: 20, height: 20)
+                    } else if let imageName = imageName {
+                        Image(imageName)
+                            .resizable()
+                            .scaledToFit()
+                            .foregroundColor(.white)
+                            .frame(width: 32, height: 32)
+                    }
                 }
+                .padding(.top, 20)
             }
+        } else {
+            VStack(spacing: 4) {
+                Image(systemName: "xmark.circle")
+                    .foregroundColor(.red)
+                Text("Ошибка")
+                    .font(.system(size: 8))
+                    .foregroundColor(.red)
+            }
+            .frame(width: 40, height: 40)
             .padding(.top, 20)
         }
     }
@@ -159,10 +172,16 @@ struct ContactsView: View {
             Text(title)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
-            
-            Link(value, destination: URL(string: url)!)
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundColor(.lightBlue)
+            if let validURL = URL(string: url.trimmingCharacters(in: .whitespacesAndNewlines)) {
+                Link(value, destination: validURL)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.lightBlue)
+            } else {
+                Text(value)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.red)
+                    .help("Некорректная ссылка")
+            }
         }
     }
     
