@@ -104,12 +104,10 @@ struct GalleryView: View {
                 AddGalleryPhotoView(viewModel: viewModel)
             }
             .fullScreenCover(item: $selectedPhoto) { photo in
-                if let currentGroup = viewModel.groupedPhotos[photo.title] {
-                    FullScreenImageView(
-                        groupPhotos: currentGroup,
-                        selectedPhotoID: photo.id
-                    )
-                }
+                FullScreenImageView(
+                    allPhotos: viewModel.allPhotosSorted,
+                    selectedPhotoID: photo.id
+                )
             }
         }
     }

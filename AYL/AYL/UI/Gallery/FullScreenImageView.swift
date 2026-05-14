@@ -11,14 +11,15 @@ struct FullScreenImageView: View {
     
     // MARK: - Properties
     
-    let groupPhotos: [GalleryItem]
+    //    let groupPhotos: [GalleryItem]
+    let allPhotos: [GalleryItem]
     @State var selectedPhotoID: String
     @Environment(\.dismiss) var dismiss
     
     // MARK: - Init
     
-    init(groupPhotos: [GalleryItem], selectedPhotoID: String) {
-        self.groupPhotos = groupPhotos
+    init(allPhotos: [GalleryItem], selectedPhotoID: String) {
+        self.allPhotos = allPhotos
         _selectedPhotoID = State(initialValue: selectedPhotoID)
     }
     
@@ -27,7 +28,7 @@ struct FullScreenImageView: View {
     var body: some View {
         ZStack(alignment: .topTrailing) {
             TabView(selection: $selectedPhotoID) {
-                ForEach(groupPhotos, id: \.id) { photo in
+                ForEach(allPhotos, id: \.id) { photo in
                     ZoomableImagePage(photo: photo)
                         .tag(photo.id)
                 }

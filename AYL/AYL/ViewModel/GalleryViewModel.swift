@@ -26,6 +26,9 @@ class GalleryViewModel: ObservableObject {
     var sortedTitles: [String] {
         groupedPhotos.keys.sorted()
     }
+    var allPhotosSorted: [GalleryItem] {
+        sortedTitles.flatMap { groupedPhotos[$0] ?? [] }
+    }
     
     // MARK: - Data Fetching
     
