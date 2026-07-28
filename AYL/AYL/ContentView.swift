@@ -8,14 +8,15 @@
 import SwiftUI
 
 struct ContentView: View {
+    
+    @Environment(\.scenePhase) var scenePhase
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        if scenePhase == .active {
+            TabBarView()
+        } else {
+            Color.clear
         }
-        .padding()
     }
 }
 
