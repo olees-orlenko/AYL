@@ -18,6 +18,8 @@ struct AddNewsView: View {
     @State private var imageUrl: String = ""
     @State private var content: String = ""
     @State private var linkUrl: String = ""
+    @State private var isEvent: Bool = false
+    @State private var eventDate: Date = Date().addingTimeInterval(60 * 60 * 24)
     var isFormValid: Bool {
         !title.isEmpty && !imageUrl.isEmpty && !content.isEmpty
     }
@@ -53,6 +55,19 @@ struct AddNewsView: View {
                             .disableAutocorrection(true)
                     }
                     .padding(.vertical, 2)
+                }
+                Section(header: Text("Push-уведомления")) {
+                    Toggle("Это конференция/тренинг", isOn: $isEvent)
+                    if isEvent {
+                        DatePicker("Дата и время мероприятия", selection: $eventDate, displayedComponents: [.date, .hourAndMinute])
+                        Text("Подписчикам сразу придёт push о новом мероприятии и ещё один — за день до даты выше.")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                    } else {
+                        Text("Обычная новость: push не отправляется автоматически.")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                    }
                 }
                 Section(header: Text("Текст новости")) {
                     VStack(alignment: .leading, spacing: 4) {

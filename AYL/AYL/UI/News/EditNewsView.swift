@@ -19,6 +19,8 @@ struct EditNewsView: View {
     @State private var imageUrl: String = ""
     @State private var content: String = ""
     @State private var linkUrl: String = ""
+    @State private var isEvent: Bool = false
+    @State private var eventDate: Date = Date().addingTimeInterval(60 * 60 * 24)
     @State private var titleError: String? = nil
     @State private var imageUrlError: String? = nil
     @State private var contentError: String? = nil
@@ -39,6 +41,8 @@ struct EditNewsView: View {
         _imageUrl = State(initialValue: newsItem.imageUrl)
         _content = State(initialValue: newsItem.content)
         _linkUrl = State(initialValue: newsItem.linkUrl)
+        _isEvent = State(initialValue: newsItem.isEvent)
+        _eventDate = State(initialValue: newsItem.eventDate ?? Date().addingTimeInterval(60 * 60 * 24))
     }
     
     // MARK: - Validation
@@ -140,6 +144,19 @@ struct EditNewsView: View {
                 if let titleError = titleError { Text(titleError).font(.caption).foregroundColor(.red) }
                 if let imageUrlError = imageUrlError { Text(imageUrlError).font(.caption).foregroundColor(.red) }
                 if let linkUrlError = linkUrlError { Text(linkUrlError).font(.caption).foregroundColor(.red) }
+                Section(header: Text("Push-уведомления")) {
+                    Toggle("Это конференция/тренинг", isOn: $isEvent)
+                    if isEvent {
+                        DatePicker("Дата и время мероприятия", selection: $eventDate, displayedComponents: [.date, .hourAndMinute])
+                        Text("Подписчикам придёт push о мероприятии и напоминание за день до даты выше.")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                    } else {
+                        Text("Обычная новость: push не отправляется автоматически.")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                    }
+                }
                 Section(header: Text("Текст новости")) {
                     TextEditor(text: $content)
                         .frame(minHeight: 200)
@@ -209,7 +226,9 @@ struct EditNewsView_Previews: PreviewProvider {
                 content: "Пример текста новости.",
                 imageUrl: "https://via.placeholder.com/300x150/aabbcc/ffffff?text=News+Image",
                 date: Date(),
-                linkUrl: "https://example.com"
+                linkUrl: "https://example.com",
+                isEvent: false,
+                eventDate: nil
             )
         )
     }

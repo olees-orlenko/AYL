@@ -55,6 +55,9 @@ struct NewsCard: View {
     
     private var textSection: some View {
         VStack(alignment: .leading, spacing: 8) {
+            if news.isEvent {
+                eventBadge
+            }
             Text(news.title.uppercased())
                 .font(.headline)
                 .fontWeight(.bold)
@@ -66,6 +69,21 @@ struct NewsCard: View {
                 .lineLimit(3)
         }
         .padding(.horizontal, 2)
+    }
+    
+    private var eventBadge: some View {
+        HStack(spacing: 4) {
+            Image(systemName: "calendar.badge.clock")
+                .font(.system(size: 11, weight: .bold))
+            Text(news.formattedEventDate ?? "Мероприятие")
+                .font(.caption2)
+                .fontWeight(.bold)
+        }
+        .foregroundColor(.violet)
+        .padding(.vertical, 4)
+        .padding(.horizontal, 8)
+        .background(Color.violet.opacity(0.12))
+        .cornerRadius(8)
     }
     
     private var footerSection: some View {

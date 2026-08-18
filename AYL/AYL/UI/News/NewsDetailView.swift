@@ -77,15 +77,27 @@ struct NewsDetailView: View {
                 .foregroundColor(.violet)
         }
     }
-    
+
     private var dateSection: some View {
-        HStack {
-            Image(systemName: "calendar")
-                .font(.caption)
-            Text(news.formattedDate)
-                .font(.subheadline)
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Image(systemName: "calendar")
+                    .font(.caption)
+                Text(news.formattedDate)
+                    .font(.subheadline)
+            }
+            .foregroundColor(.gray)
+            if news.isEvent, let formattedEventDate = news.formattedEventDate {
+                HStack {
+                    Image(systemName: "calendar.badge.clock")
+                        .font(.caption)
+                    Text("Мероприятие: \(formattedEventDate)")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                }
+                .foregroundColor(.violet)
+            }
         }
-        .foregroundColor(.gray)
     }
     
     private var contentSection: some View {

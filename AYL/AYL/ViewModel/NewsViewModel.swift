@@ -54,28 +54,40 @@ class NewsViewModel: ObservableObject {
     }
     
     // MARK: - Admin Actions (Add/Delete)
-    
-    func addNews(title: String, content: String, imageUrl: String, linkUrl: String) {
-        db.collection("News").addDocument(data: [
+
+    func addNews(title: String, content: String, imageUrl: String, linkUrl: String, isEvent: Bool = false, eventDate: Date? = nil) {
+        var data: [String: Any] = [
             "title": title,
             "content": content,
             "imageUrl": imageUrl,
             "linkUrl": linkUrl,
-            "date": FieldValue.serverTimestamp()
-        ]) { error in
+            "date": FieldValue.serverTimestamp(),
+            "isEvent": isEvent
+        ]
+        if isEvent, let eventDate {
+            data["eventDate"] = Timestamp(date: eventDate)
+        }
+        db.collection("News").addDocument(data: data) { error in
             if let error = error {
                 print("Ошибка при добавлении новости: \(error.localizedDescription)")
             }
         }
     }
     
-    func updateNews(id: String, title: String, content: String, imageUrl: String, linkUrl: String) {
-        db.collection("News").document(id).updateData([
+    func updateNews(id: String, title: String, content: String, imageUrl: String, linkUrl: String, isEvent: Bool = false, eventDate: Date? = nil) {
+        var data: [String: Any] = [
             "title": title,
             "content": content,
             "imageUrl": imageUrl,
             "linkUrl": linkUrl,
-        ]) { error in
+            "isEvent": isEvent
+        ]
+        if isEvent, let eventDate {
+            data["eventDate"] = Timestamp(date: eventDate)
+        } else {
+            data["eventDate"] = FieldValue.delete()
+        }
+        db.collection("News").document(id).updateData(data) { error in
             if let error = error {
                 print("Ошибка при обновлении новости: \(error.localizedDescription)")
             }
