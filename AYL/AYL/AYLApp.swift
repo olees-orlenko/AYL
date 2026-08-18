@@ -8,6 +8,7 @@
 import SwiftUI
 import FirebaseCore
 import FirebaseFirestore
+import FirebaseMessaging
 
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
@@ -16,7 +17,17 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         let settings = Firestore.firestore().settings
         settings.cacheSettings = PersistentCacheSettings()
         Firestore.firestore().settings = settings
+        PushNotificationManager.shared.configure()
+        PushNotificationManager.shared.requestAuthorizationAndRegister()
         return true
+    }
+    
+    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        Messaging.messaging().apnsToken = deviceToken
+    }
+
+    func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        print("Push: не удалось зарегистрироваться в APNs — \(error.localizedDescription)")
     }
 }
 

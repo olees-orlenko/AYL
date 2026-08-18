@@ -11,6 +11,7 @@
 		FC1651722F8EA4CE00C2CD4C /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = FC1651712F8EA4CE00C2CD4C /* FirebaseFirestore */; };
 		FC87C4AC2F913A06007F5887 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = FC87C4AB2F913A06007F5887 /* FirebaseAuth */; };
 		FCD95A4E2F9FA44B00B93BEA /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = FCD95A4D2F9FA44B00B93BEA /* Kingfisher */; };
+		FCF6E59B30349D1F0033B2C4 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = FCF6E59A30349D1F0033B2C4 /* FirebaseMessaging */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -45,6 +46,7 @@
 			files = (
 				FCD95A4E2F9FA44B00B93BEA /* Kingfisher in Frameworks */,
 				FC1651702F8EA4CE00C2CD4C /* FirebaseAnalytics in Frameworks */,
+				FCF6E59B30349D1F0033B2C4 /* FirebaseMessaging in Frameworks */,
 				FC87C4AC2F913A06007F5887 /* FirebaseAuth in Frameworks */,
 				FC1651722F8EA4CE00C2CD4C /* FirebaseFirestore in Frameworks */,
 			);
@@ -57,6 +59,7 @@
 			isa = PBXGroup;
 			children = (
 				FC8C2AF82F7575D0000C33CA /* AYL */,
+				FCF6E59930349D1F0033B2C4 /* Frameworks */,
 				FC8C2AF72F7575D0000C33CA /* Products */,
 			);
 			sourceTree = "<group>";
@@ -67,6 +70,13 @@
 				FC8C2AF62F7575D0000C33CA /* AYL.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		FCF6E59930349D1F0033B2C4 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -93,6 +103,7 @@
 				FC1651712F8EA4CE00C2CD4C /* FirebaseFirestore */,
 				FC87C4AB2F913A06007F5887 /* FirebaseAuth */,
 				FCD95A4D2F9FA44B00B93BEA /* Kingfisher */,
+				FCF6E59A30349D1F0033B2C4 /* FirebaseMessaging */,
 			);
 			productName = AYL;
 			productReference = FC8C2AF62F7575D0000C33CA /* AYL.app */;
@@ -412,6 +423,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = FCD95A4C2F9FA44B00B93BEA /* XCRemoteSwiftPackageReference "Kingfisher" */;
 			productName = Kingfisher;
+		};
+		FCF6E59A30349D1F0033B2C4 /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FC16516E2F8EA4CE00C2CD4C /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
