@@ -189,7 +189,7 @@ struct EditNewsView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Сохранить") {
                         if isOverallFormValid {
-                            viewModel.updateNews(id: newsItem.id, title: title, content: content, imageUrl: imageUrl, linkUrl: linkUrl)
+                            viewModel.updateNews(id: newsItem.id, title: title, content: content, imageUrl: imageUrl, linkUrl: linkUrl, isEvent: isEvent, eventDate: isEvent ? eventDate : nil)
                             dismiss()
                         }
                     }
@@ -199,6 +199,7 @@ struct EditNewsView: View {
         }
         .onAppear {
             validateForm()
+            print("DEBUG newsItem.id =", newsItem.id, "isEvent =", newsItem.isEvent)
         }
     }
 }

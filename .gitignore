@@ -63,3 +63,10 @@ fastlane/test_output
 
 # GoogleService
 GoogleService-Info.plist
+
+# Firebase Cloud Functions
+firebase/functions/node_modules/
+firebase/functions/lib/
+firebase/firebase-debug.log
+firebase/.firebase/
+firebase/*.local

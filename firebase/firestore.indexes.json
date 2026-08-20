@@ -1,0 +1,13 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "News",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "isEvent", "order": "ASCENDING" },
+        { "fieldPath": "eventDate", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

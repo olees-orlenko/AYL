@@ -104,7 +104,7 @@ struct AddNewsView: View {
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Сохранить") {
-                        viewModel.addNews(title: title, content: content, imageUrl: imageUrl, linkUrl: linkUrl)
+                        viewModel.addNews(title: title, content: content, imageUrl: imageUrl, linkUrl: linkUrl, isEvent: isEvent, eventDate: isEvent ? eventDate : nil)
                         dismiss()
                     }
                     .disabled(!isFormValid)

@@ -41,20 +41,23 @@ class NewsViewModel: ObservableObject {
                 self.news = documents.compactMap { doc -> NewsItem? in
                     let data = doc.data()
                     let timestamp = data["date"] as? Timestamp ?? Timestamp()
+                    let eventTimestamp = data["eventDate"] as? Timestamp
                     return NewsItem(
                         id: doc.documentID,
                         title: data["title"] as? String ?? "",
                         content: data["content"] as? String ?? "",
                         imageUrl: data["imageUrl"] as? String ?? "",
                         date: timestamp.dateValue(),
-                        linkUrl: data["linkUrl"] as? String ?? ""
+                        linkUrl: data["linkUrl"] as? String ?? "",
+                        isEvent: data["isEvent"] as? Bool ?? false,
+                        eventDate: eventTimestamp?.dateValue()
                     )
                 }
             }
     }
     
     // MARK: - Admin Actions (Add/Delete)
-
+    
     func addNews(title: String, content: String, imageUrl: String, linkUrl: String, isEvent: Bool = false, eventDate: Date? = nil) {
         var data: [String: Any] = [
             "title": title,
