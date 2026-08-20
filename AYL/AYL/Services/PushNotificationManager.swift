@@ -88,8 +88,9 @@ extension PushNotificationManager: UNUserNotificationCenterDelegate {
                                 withCompletionHandler completionHandler: @escaping () -> Void) {
         let userInfo = response.notification.request.content.userInfo
         if let newsId = userInfo["newsId"] as? String {
-            print("Push: открыть новость \(newsId)")
-            // TODO: прокинуть newsId в навигацию, когда появится deep link на NewsDetailView.
+            DispatchQueue.main.async {
+                NavigationCoordinator.shared.openNews(id: newsId)
+            }
         }
         completionHandler()
     }

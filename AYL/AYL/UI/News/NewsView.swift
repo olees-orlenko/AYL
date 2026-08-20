@@ -11,6 +11,8 @@ struct NewsView: View {
     
     // MARK: - Properties
     
+    @ObservedObject private var coordinator = NavigationCoordinator.shared
+    @State private var pushOpenedNews: NewsItem? = nil
     @StateObject var viewModel = NewsViewModel()
     @EnvironmentObject var authManager: AuthManager
     @State private var showingAddSheet = false
@@ -58,6 +60,15 @@ struct NewsView: View {
             .onAppear { viewModel.fetchData() }
             .sheet(item: $selectedNews) { news in
                 EditNewsView(viewModel: viewModel, newsItem: news)
+            }
+            .navigationDestination(item: $pushOpenedNews) { news in
+                NewsDetailView(news: news)
+            }
+            .onChange(of: coordinator.pendingNewsId) { _, newId in
+                tryOpenPendingNews(newId)
+            }
+            .onChange(of: viewModel.news.count) { _, _ in
+                tryOpenPendingNews(coordinator.pendingNewsId)
             }
         }
     }
@@ -129,6 +140,12 @@ struct NewsView: View {
                 Button("Выйти") { authManager.signOut() }
             }
         }
+    }
+    private func tryOpenPendingNews(_ newsId: String?) {
+        guard let newsId,
+              let match = viewModel.news.first(where: { $0.id == newsId }) else { return }
+        pushOpenedNews = match
+        coordinator.pendingNewsId = nil
     }
 }
 

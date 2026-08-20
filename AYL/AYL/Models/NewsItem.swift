@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct NewsItem: Identifiable {
+struct NewsItem: Identifiable, Hashable {
     let id: String
     let title: String
     let content: String
