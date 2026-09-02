@@ -17,6 +17,7 @@ struct MainView: View {
     @AppStorage("isDarkMode") private var isDarkMode = false
     @State private var tapCount = 0
     @State private var showingLogin = false
+    @State private var showingProfile = false
     
     // MARK: - Body
     
@@ -32,6 +33,14 @@ struct MainView: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button {
+                        showingProfile = true
+                    } label: {
+                        Image(systemName: "person.crop.circle")
+                            .foregroundColor(.lightBlue)
+                    }
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         isDarkMode.toggle()
@@ -43,6 +52,9 @@ struct MainView: View {
             }
             .sheet(isPresented: $showingLogin) {
                 LoginView()
+            }
+            .sheet(isPresented: $showingProfile) {
+                ProfileView()
             }
         }
     }
