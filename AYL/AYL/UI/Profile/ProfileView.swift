@@ -37,7 +37,17 @@ struct ProfileView: View {
             .sheet(isPresented: $showingRegister) {
                 RegisterView()
             }
+            .sheet(isPresented: $showingEdit) {
+                if let participant {
+                    EditProfileView(participant: participant) { updated in
+                        self.participant = updated
+                    }
+                }
+            }
             .onChange(of: authManager.currentUserId) { _, _ in
+                fetchProfile()
+            }
+            .onChange(of: authManager.isParticipantLoggedIn) { _, _ in
                 fetchProfile()
             }
             .onAppear { fetchProfile() }
