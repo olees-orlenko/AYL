@@ -9,6 +9,9 @@ import SwiftUI
 import FirebaseFirestore
 
 struct EditProfileView: View {
+    
+    // MARK: - Properties
+    
     @Environment(\.dismiss) var dismiss
     let participant: Participant
     var onSaved: (Participant) -> Void
@@ -19,6 +22,8 @@ struct EditProfileView: View {
     @State private var isSaving = false
     @State private var errorMessage = ""
     
+    // MARK: - Init
+    
     init(participant: Participant, onSaved: @escaping (Participant) -> Void) {
         self.participant = participant
         self.onSaved = onSaved
@@ -26,6 +31,8 @@ struct EditProfileView: View {
         _phone = State(initialValue: participant.phone)
         _role = State(initialValue: participant.role)
     }
+    
+    // MARK: - Body
     
     var body: some View {
         NavigationStack {
@@ -68,6 +75,8 @@ struct EditProfileView: View {
             }
         }
     }
+    
+    // MARK: - Private methods
     
     private func save() {
         isSaving = true

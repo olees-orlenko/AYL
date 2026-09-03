@@ -9,10 +9,15 @@ import SwiftUI
 import FirebaseAuth
 
 struct LoginView: View {
+    
+    // MARK: - Properties
+    
     @Environment(\.dismiss) var dismiss
     @State private var email = ""
     @State private var password = ""
     @State private var errorMessage = ""
+    
+    // MARK: - Body
     
     var body: some View {
         NavigationStack {
@@ -46,6 +51,8 @@ struct LoginView: View {
             }
         }
     }
+    
+    // MARK: - Private methods
     
     private func login() {
         Auth.auth().signIn(withEmail: email, password: password) { _, error in

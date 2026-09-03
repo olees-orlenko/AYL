@@ -9,28 +9,43 @@ import SwiftUI
 import FirebaseFirestore
 
 struct ProfileView: View {
+    
+    // MARK: - Properties
+    
     @EnvironmentObject var authManager: AuthManager
     @State private var participant: Participant?
+    @State private var participations: [Participation] = []
     @State private var isLoadingProfile = false
     @State private var showingLogin = false
     @State private var showingRegister = false
     @State private var showingEdit = false
+    @State private var showingAddParticipation = false
     
     private let db = Firestore.firestore()
     
+    // MARK: - Body
+    
     var body: some View {
         NavigationStack {
-            Group {
-                if authManager.isAdminLoggedIn {
-                    adminState
-                } else if authManager.isParticipantLoggedIn {
-                    participantState
-                } else {
-                    loggedOutState
+            ZStack {
+                GeometryReader { geometry in
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 20) {
+                            bannerContent
+                            paddedContent
+                                .padding(.horizontal, 25)
+                        }
+                        .padding(.bottom, 40)
+                        .frame(minHeight: geometry.size.height)
+                    }
                 }
             }
-            .navigationTitle("Профиль")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Color.clear.frame(height: 0)
+                }
+            }
             .sheet(isPresented: $showingLogin) {
                 ParticipantLoginView()
             }
@@ -44,79 +59,249 @@ struct ProfileView: View {
                     }
                 }
             }
+            .sheet(isPresented: $showingAddParticipation) {
+                if let participant {
+                    AddParticipationView(participantId: participant.id) {
+                        fetchParticipations()
+                    }
+                }
+            }
             .onChange(of: authManager.currentUserId) { _, _ in
                 fetchProfile()
+                fetchParticipations()
             }
             .onChange(of: authManager.isParticipantLoggedIn) { _, _ in
                 fetchProfile()
+                fetchParticipations()
             }
-            .onAppear { fetchProfile() }
+            .onAppear {
+                fetchProfile()
+                fetchParticipations()
+            }
         }
     }
     
-    // MARK: - States
+    // MARK: - Subviews
     
-    private var loggedOutState: some View {
-        VStack(spacing: 20) {
-            Spacer()
-            Image(systemName: "person.crop.circle")
-                .font(.system(size: 60))
-                .foregroundColor(.secondary)
-            Text("Войдите в личный кабинет, чтобы записываться на мероприятия и управлять профилем")
-                .multilineTextAlignment(.center)
-                .foregroundColor(.secondary)
-                .padding(.horizontal, 30)
-            Button("Войти") { showingLogin = true }
-                .buttonStyle(.borderedProminent)
-            Button("Зарегистрироваться") { showingRegister = true }
-                .buttonStyle(.bordered)
-            Spacer()
+    @ViewBuilder
+    private var bannerContent: some View {
+        if authManager.isAdminLoggedIn {
+            profileBanner(systemImage: "checkmark.seal.fill")
+        } else if authManager.isParticipantLoggedIn, let participant {
+            profileBanner(initials: initials(for: participant.name))
+        } else {
+            profileBanner(systemImage: "person.fill")
         }
-        .padding()
     }
     
-    private var adminState: some View {
-        VStack(spacing: 16) {
-            Spacer()
-            Image(systemName: "checkmark.seal.fill")
-                .font(.system(size: 50))
+    private var wallpaper: some View {
+        ZStack {
+            LinearGradient(
+                colors: [Color.lightBlue, Color.violet, Color.minty],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            GeometryReader { geo in
+                ZStack {
+                    Circle()
+                        .fill(Color.white.opacity(0.25))
+                        .frame(width: geo.size.width * 0.8)
+                        .offset(x: -geo.size.width * 0.25, y: -geo.size.height * 0.3)
+                    Circle()
+                        .fill(Color.minty.opacity(0.85))
+                        .frame(width: geo.size.width * 0.7)
+                        .offset(x: geo.size.width * 0.3, y: geo.size.height * 0.2)
+                    Circle()
+                        .fill(Color.violet.opacity(0.75))
+                        .frame(width: geo.size.width * 0.55)
+                        .offset(x: -geo.size.width * 0.1, y: geo.size.height * 0.45)
+                }
+                .blur(radius: 40)
+            }
+        }
+    }
+    
+    private var paddedContent: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            headerSection
+            stateBody
+        }
+    }
+    
+    private var headerSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Кабинет")
+                .font(.title.bold())
+            Rectangle()
+                .frame(width: 50, height: 4)
                 .foregroundColor(.violet)
-            Text("Вы вошли как администратор")
-                .font(.headline)
-            Button("Выйти", role: .destructive) { authManager.signOut() }
-            Spacer()
         }
-        .padding()
     }
     
-    private var participantState: some View {
-        Group {
-            if isLoadingProfile {
-                ProgressView()
-            } else if let participant {
-                List {
-                    Section("Профиль") {
-                        LabeledContent("Имя", value: participant.name)
-                        LabeledContent("Телефон", value: participant.phone.isEmpty ? "—" : participant.phone)
-                        LabeledContent("Роль", value: participant.role.displayName)
-                        LabeledContent("Email", value: participant.email)
-                    }
-                    Section {
-                        Button("Редактировать профиль") { showingEdit = true }
-                    }
-                    Section {
-                        Button("Выйти", role: .destructive) { authManager.signOut() }
-                    }
-                }
-            } else {
-                VStack(spacing: 12) {
-                    Spacer()
-                    Text("Не удалось загрузить профиль")
+    @ViewBuilder
+    private var stateBody: some View {
+        if authManager.isAdminLoggedIn {
+            adminBody
+        } else if authManager.isParticipantLoggedIn {
+            participantBody
+        } else {
+            loggedOutBody
+        }
+    }
+    
+    private var loggedOutBody: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Text("Войдите в личный кабинет, чтобы записываться на мероприятия и управлять профилем")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+            actionButton(title: "Войти") { showingLogin = true }
+            actionButton(title: "Зарегистрироваться") { showingRegister = true }
+        }
+    }
+    
+    private var adminBody: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Text("Вы вошли как администратор")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+            actionButton(title: "Выйти", isDestructive: true) { authManager.signOut() }
+        }
+    }
+    
+    @ViewBuilder
+    private var participantBody: some View {
+        if isLoadingProfile {
+            ProgressView()
+                .frame(maxWidth: .infinity)
+                .padding(.top, 40)
+        } else if let participant {
+            VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(participant.name)
+                        .font(.system(size: 20, weight: .semibold))
+                    Text(participant.role.displayName)
+                        .font(.subheadline)
                         .foregroundColor(.secondary)
-                    Button("Повторить") { fetchProfile() }
-                    Spacer()
+                }
+                infoSection(participant: participant)
+                participationsSection
+                actionButton(title: "Редактировать профиль") { showingEdit = true }
+                actionButton(title: "Выйти", isDestructive: true) { authManager.signOut() }
+            }
+        } else {
+            VStack(spacing: 12) {
+                Text("Не удалось загрузить профиль")
+                    .foregroundColor(.secondary)
+                actionButton(title: "Повторить") { fetchProfile() }
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.top, 40)
+        }
+    }
+    
+    private var participationsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Участие в мероприятиях")
+                    .font(.title3.bold())
+                Rectangle()
+                    .frame(width: 40, height: 3)
+                    .foregroundColor(.violet)
+            }
+            if participations.isEmpty {
+                Text("Пока нет ни одной записи")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            } else {
+                VStack(alignment: .leading, spacing: 12) {
+                    ForEach(participations) { item in
+                        participationRow(item)
+                    }
                 }
             }
+            actionButton(title: "Добавить участие") { showingAddParticipation = true }
+        }
+    }
+    
+    // MARK: - Private methods
+    
+    private func profileBanner(initials: String? = nil, systemImage: String? = nil) -> some View {
+        ZStack {
+            wallpaper
+            avatarBadge(initials: initials, systemImage: systemImage)
+        }
+        .frame(height: 220)
+        .frame(maxWidth: .infinity)
+        .clipped()
+    }
+    
+    private func avatarBadge(initials: String?, systemImage: String?) -> some View {
+        ZStack {
+            Circle()
+                .fill(.ultraThinMaterial)
+                .frame(width: 140, height: 140)
+            Circle()
+                .stroke(Color.white, lineWidth: 4)
+                .frame(width: 140, height: 140)
+            if let initials, !initials.isEmpty {
+                Text(initials)
+                    .font(.system(size: 48, weight: .bold))
+                    .foregroundColor(.white)
+            } else if let systemImage {
+                Image(systemName: systemImage)
+                    .font(.system(size: 48))
+                    .foregroundColor(.white)
+            }
+        }
+        .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
+    }
+    
+    private func initials(for name: String) -> String {
+        let letters = name.split(separator: " ").prefix(2).compactMap { $0.first }
+        return String(letters).uppercased()
+    }
+    
+    private func infoSection(participant: Participant) -> some View {
+        VStack(alignment: .leading, spacing: 15) {
+            infoRow(title: "Телефон:", value: participant.phone.isEmpty ? "—" : participant.phone)
+            infoRow(title: "Email:", value: participant.email)
+        }
+    }
+    
+    private func infoRow(title: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+            Text(value)
+                .font(.system(size: 18, weight: .semibold))
+        }
+    }
+    
+    private func participationRow(_ item: Participation) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Text("•")
+                .font(.system(size: 18, weight: .black))
+                .foregroundColor(.lightBlue)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(item.eventTitle)
+                    .font(.system(size: 16, weight: .semibold))
+                Text("\(item.formattedDate) · \(item.role.displayName)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+    }
+    
+    private func actionButton(title: String, isDestructive: Bool = false, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundColor(isDestructive ? .red : .white)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(isDestructive ? Color.red.opacity(0.08) : Color.minty)
+                .cornerRadius(15)
         }
     }
     
@@ -141,5 +326,31 @@ struct ProfileView: View {
                 createdAt: timestamp.dateValue()
             )
         }
+    }
+    
+    private func fetchParticipations() {
+        guard authManager.isParticipantLoggedIn, let uid = authManager.currentUserId else {
+            participations = []
+            return
+        }
+        db.collection("participants").document(uid).collection("participations")
+            .order(by: "eventDate", descending: true)
+            .getDocuments { snapshot, _ in
+                guard let documents = snapshot?.documents else { return }
+                participations = documents.compactMap { doc -> Participation? in
+                    let data = doc.data()
+                    guard let title = data["eventTitle"] as? String,
+                          let timestamp = data["eventDate"] as? Timestamp,
+                          let roleRaw = data["role"] as? String,
+                          let role = ParticipantRole(rawValue: roleRaw) else { return nil }
+                    return Participation(
+                        id: doc.documentID,
+                        eventTitle: title,
+                        eventDate: timestamp.dateValue(),
+                        role: role,
+                        newsId: data["newsId"] as? String
+                    )
+                }
+            }
     }
 }

@@ -10,8 +10,7 @@ import SwiftUI
 struct FullScreenImageView: View {
     
     // MARK: - Properties
-    
-    //    let groupPhotos: [GalleryItem]
+
     let allPhotos: [GalleryItem]
     @State var selectedPhotoID: String
     @Environment(\.dismiss) var dismiss

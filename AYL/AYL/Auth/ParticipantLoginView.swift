@@ -9,6 +9,9 @@ import SwiftUI
 import FirebaseAuth
 
 struct ParticipantLoginView: View {
+    
+    // MARK: - Properties
+    
     @Environment(\.dismiss) var dismiss
     @State private var email = ""
     @State private var password = ""
@@ -18,6 +21,8 @@ struct ParticipantLoginView: View {
     private var isFormValid: Bool {
         !email.trimmingCharacters(in: .whitespaces).isEmpty && !password.isEmpty
     }
+    
+    // MARK: - Body
     
     var body: some View {
         NavigationStack {
@@ -57,6 +62,8 @@ struct ParticipantLoginView: View {
             }
         }
     }
+    
+    // MARK: - Private methods
     
     private func login() {
         errorMessage = ""

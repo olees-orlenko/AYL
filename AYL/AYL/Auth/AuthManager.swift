@@ -11,12 +11,17 @@ import FirebaseFirestore
 internal import Combine
 
 class AuthManager: ObservableObject {
+    
+    // MARK: - Properties
+    
     @Published var isAdminLoggedIn: Bool = false
     @Published var isParticipantLoggedIn: Bool = false
     @Published var currentUserId: String? = nil
     
     private var handler: AuthStateDidChangeListenerHandle?
     private let db = Firestore.firestore()
+    
+    // MARK: - Init
     
     init() {
         DispatchQueue.main.async {

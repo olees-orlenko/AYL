@@ -10,6 +10,9 @@ import FirebaseAuth
 import FirebaseFirestore
 
 struct RegisterView: View {
+    
+    // MARK: - Properties
+    
     @Environment(\.dismiss) var dismiss
     @State private var name = ""
     @State private var phone = ""
@@ -24,6 +27,8 @@ struct RegisterView: View {
         !email.trimmingCharacters(in: .whitespaces).isEmpty &&
         password.count >= 6
     }
+    
+    // MARK: - Body
     
     var body: some View {
         NavigationStack {
@@ -72,6 +77,8 @@ struct RegisterView: View {
             }
         }
     }
+    
+    // MARK: - Private methods
     
     private func register() {
         errorMessage = ""
