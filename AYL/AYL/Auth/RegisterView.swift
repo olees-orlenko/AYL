@@ -6,30 +6,28 @@
 //
 
 import SwiftUI
-import FirebaseAuth
-import FirebaseFirestore
 
 struct RegisterView: View {
-    
+
     // MARK: - Properties
-    
+
     @Environment(\.dismiss) var dismiss
+    @ObservedObject var viewModel: ProfileViewModel
+
     @State private var name = ""
     @State private var phone = ""
     @State private var role: ParticipantRole = .alpha
     @State private var email = ""
     @State private var password = ""
-    @State private var errorMessage = ""
-    @State private var isLoading = false
-    
+
     private var isFormValid: Bool {
         !name.trimmingCharacters(in: .whitespaces).isEmpty &&
         !email.trimmingCharacters(in: .whitespaces).isEmpty &&
         password.count >= 6
     }
-    
+
     // MARK: - Body
-    
+
     var body: some View {
         NavigationStack {
             Form {
@@ -48,8 +46,8 @@ struct RegisterView: View {
                         .textInputAutocapitalization(.never)
                         .keyboardType(.emailAddress)
                     SecureField("Пароль (минимум 6 символов)", text: $password)
-                    if !errorMessage.isEmpty {
-                        Text(errorMessage)
+                    if !viewModel.errorMessage.isEmpty {
+                        Text(viewModel.errorMessage)
                             .foregroundColor(.red)
                             .font(.caption)
                     }
@@ -57,7 +55,7 @@ struct RegisterView: View {
                 Button {
                     register()
                 } label: {
-                    if isLoading {
+                    if viewModel.isSaving {
                         ProgressView()
                             .frame(maxWidth: .infinity)
                     } else {
@@ -66,7 +64,7 @@ struct RegisterView: View {
                             .bold()
                     }
                 }
-                .disabled(!isFormValid || isLoading)
+                .disabled(!isFormValid || viewModel.isSaving)
             }
             .navigationTitle("Регистрация")
             .navigationBarTitleDisplayMode(.inline)
@@ -77,36 +75,12 @@ struct RegisterView: View {
             }
         }
     }
-    
+
     // MARK: - Private methods
-    
+
     private func register() {
-        errorMessage = ""
-        isLoading = true
-        Auth.auth().createUser(withEmail: email, password: password) { result, error in
-            if let error = error {
-                isLoading = false
-                errorMessage = error.localizedDescription
-                return
-            }
-            guard let uid = result?.user.uid else {
-                isLoading = false
-                errorMessage = "Не удалось создать аккаунт"
-                return
-            }
-            let data: [String: Any] = [
-                "name": name.trimmingCharacters(in: .whitespaces),
-                "phone": phone.trimmingCharacters(in: .whitespaces),
-                "role": role.rawValue,
-                "email": email.trimmingCharacters(in: .whitespaces),
-                "createdAt": FieldValue.serverTimestamp()
-            ]
-            Firestore.firestore().collection("participants").document(uid).setData(data) { error in
-                isLoading = false
-                if let error = error {
-                    errorMessage = "Аккаунт создан, но не удалось сохранить профиль: \(error.localizedDescription)"
-                    return
-                }
+        viewModel.register(name: name, phone: phone, role: role, email: email, password: password) { success in
+            if success {
                 dismiss()
             }
         }

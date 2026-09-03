@@ -6,28 +6,24 @@
 //
 
 import SwiftUI
-import FirebaseFirestore
 
 struct AddParticipationView: View {
-    
+
     // MARK: - Properties
-    
+
     @Environment(\.dismiss) var dismiss
-    let participantId: String
-    var onSaved: () -> Void
-    
+    @ObservedObject var viewModel: ProfileViewModel
+
     @State private var eventTitle = ""
     @State private var eventDate = Date()
     @State private var role: ParticipantRole = .alpha
-    @State private var isSaving = false
-    @State private var errorMessage = ""
-    
+
     private var isFormValid: Bool {
         !eventTitle.trimmingCharacters(in: .whitespaces).isEmpty
     }
-    
+
     // MARK: - Body
-    
+
     var body: some View {
         NavigationStack {
             Form {
@@ -40,8 +36,8 @@ struct AddParticipationView: View {
                             Text(role.displayName).tag(role)
                         }
                     }
-                    if !errorMessage.isEmpty {
-                        Text(errorMessage)
+                    if !viewModel.errorMessage.isEmpty {
+                        Text(viewModel.errorMessage)
                             .foregroundColor(.red)
                             .font(.caption)
                     }
@@ -49,7 +45,7 @@ struct AddParticipationView: View {
                 Button {
                     save()
                 } label: {
-                    if isSaving {
+                    if viewModel.isSaving {
                         ProgressView()
                             .frame(maxWidth: .infinity)
                     } else {
@@ -58,7 +54,7 @@ struct AddParticipationView: View {
                             .bold()
                     }
                 }
-                .disabled(!isFormValid || isSaving)
+                .disabled(!isFormValid || viewModel.isSaving)
             }
             .navigationTitle("Участие в мероприятии")
             .navigationBarTitleDisplayMode(.inline)
@@ -69,29 +65,14 @@ struct AddParticipationView: View {
             }
         }
     }
-    
+
     // MARK: - Private methods
-    
+
     private func save() {
-        isSaving = true
-        errorMessage = ""
-        let data: [String: Any] = [
-            "eventTitle": eventTitle.trimmingCharacters(in: .whitespaces),
-            "eventDate": Timestamp(date: eventDate),
-            "role": role.rawValue,
-            "createdAt": FieldValue.serverTimestamp()
-        ]
-        Firestore.firestore()
-            .collection("participants").document(participantId)
-            .collection("participations").document()
-            .setData(data) { error in
-                isSaving = false
-                if let error {
-                    errorMessage = error.localizedDescription
-                    return
-                }
-                onSaved()
+        viewModel.addParticipation(eventTitle: eventTitle, eventDate: eventDate, role: role) { success in
+            if success {
                 dismiss()
             }
+        }
     }
 }

@@ -6,24 +6,23 @@
 //
 
 import SwiftUI
-import FirebaseAuth
 
 struct ParticipantLoginView: View {
-    
+
     // MARK: - Properties
-    
+
     @Environment(\.dismiss) var dismiss
+    @ObservedObject var viewModel: ProfileViewModel
+
     @State private var email = ""
     @State private var password = ""
-    @State private var errorMessage = ""
-    @State private var isLoading = false
-    
+
     private var isFormValid: Bool {
         !email.trimmingCharacters(in: .whitespaces).isEmpty && !password.isEmpty
     }
-    
+
     // MARK: - Body
-    
+
     var body: some View {
         NavigationStack {
             Form {
@@ -33,8 +32,8 @@ struct ParticipantLoginView: View {
                         .keyboardType(.emailAddress)
                     SecureField("Пароль", text: $password)
                 } footer: {
-                    if !errorMessage.isEmpty {
-                        Text(errorMessage)
+                    if !viewModel.errorMessage.isEmpty {
+                        Text(viewModel.errorMessage)
                             .foregroundColor(.red)
                             .font(.caption)
                     }
@@ -42,7 +41,7 @@ struct ParticipantLoginView: View {
                 Button {
                     login()
                 } label: {
-                    if isLoading {
+                    if viewModel.isSaving {
                         ProgressView()
                             .frame(maxWidth: .infinity)
                     } else {
@@ -51,7 +50,7 @@ struct ParticipantLoginView: View {
                             .bold()
                     }
                 }
-                .disabled(!isFormValid || isLoading)
+                .disabled(!isFormValid || viewModel.isSaving)
             }
             .navigationTitle("Вход в личный кабинет")
             .navigationBarTitleDisplayMode(.inline)
@@ -62,17 +61,12 @@ struct ParticipantLoginView: View {
             }
         }
     }
-    
+
     // MARK: - Private methods
-    
+
     private func login() {
-        errorMessage = ""
-        isLoading = true
-        Auth.auth().signIn(withEmail: email, password: password) { _, error in
-            isLoading = false
-            if let error = error {
-                errorMessage = error.localizedDescription
-            } else {
+        viewModel.login(email: email, password: password) { success in
+            if success {
                 dismiss()
             }
         }

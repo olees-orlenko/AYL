@@ -6,25 +6,20 @@
 //
 
 import SwiftUI
-import FirebaseFirestore
 
 struct ProfileView: View {
-    
+
     // MARK: - Properties
-    
+
     @EnvironmentObject var authManager: AuthManager
-    @State private var participant: Participant?
-    @State private var participations: [Participation] = []
-    @State private var isLoadingProfile = false
+    @StateObject private var viewModel = ProfileViewModel()
     @State private var showingLogin = false
     @State private var showingRegister = false
     @State private var showingEdit = false
     @State private var showingAddParticipation = false
-    
-    private let db = Firestore.firestore()
-    
+
     // MARK: - Body
-    
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -47,53 +42,44 @@ struct ProfileView: View {
                 }
             }
             .sheet(isPresented: $showingLogin) {
-                ParticipantLoginView()
+                ParticipantLoginView(viewModel: viewModel)
             }
             .sheet(isPresented: $showingRegister) {
-                RegisterView()
+                RegisterView(viewModel: viewModel)
             }
             .sheet(isPresented: $showingEdit) {
-                if let participant {
-                    EditProfileView(participant: participant) { updated in
-                        self.participant = updated
-                    }
+                if let participant = viewModel.participant {
+                    EditProfileView(viewModel: viewModel, participant: participant)
                 }
             }
             .sheet(isPresented: $showingAddParticipation) {
-                if let participant {
-                    AddParticipationView(participantId: participant.id) {
-                        fetchParticipations()
-                    }
-                }
+                AddParticipationView(viewModel: viewModel)
             }
             .onChange(of: authManager.currentUserId) { _, _ in
-                fetchProfile()
-                fetchParticipations()
+                refresh()
             }
             .onChange(of: authManager.isParticipantLoggedIn) { _, _ in
-                fetchProfile()
-                fetchParticipations()
+                refresh()
             }
             .onAppear {
-                fetchProfile()
-                fetchParticipations()
+                refresh()
             }
         }
     }
-    
+
     // MARK: - Subviews
-    
+
     @ViewBuilder
     private var bannerContent: some View {
         if authManager.isAdminLoggedIn {
             profileBanner(systemImage: "checkmark.seal.fill")
-        } else if authManager.isParticipantLoggedIn, let participant {
+        } else if authManager.isParticipantLoggedIn, let participant = viewModel.participant {
             profileBanner(initials: initials(for: participant.name))
         } else {
             profileBanner(systemImage: "person.fill")
         }
     }
-    
+
     private var wallpaper: some View {
         ZStack {
             LinearGradient(
@@ -120,14 +106,14 @@ struct ProfileView: View {
             }
         }
     }
-    
+
     private var paddedContent: some View {
         VStack(alignment: .leading, spacing: 20) {
             headerSection
             stateBody
         }
     }
-    
+
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Кабинет")
@@ -137,7 +123,7 @@ struct ProfileView: View {
                 .foregroundColor(.violet)
         }
     }
-    
+
     @ViewBuilder
     private var stateBody: some View {
         if authManager.isAdminLoggedIn {
@@ -148,7 +134,7 @@ struct ProfileView: View {
             loggedOutBody
         }
     }
-    
+
     private var loggedOutBody: some View {
         VStack(alignment: .leading, spacing: 20) {
             Text("Войдите в личный кабинет, чтобы записываться на мероприятия и управлять профилем")
@@ -158,7 +144,7 @@ struct ProfileView: View {
             actionButton(title: "Зарегистрироваться") { showingRegister = true }
         }
     }
-    
+
     private var adminBody: some View {
         VStack(alignment: .leading, spacing: 20) {
             Text("Вы вошли как администратор")
@@ -167,14 +153,14 @@ struct ProfileView: View {
             actionButton(title: "Выйти", isDestructive: true) { authManager.signOut() }
         }
     }
-    
+
     @ViewBuilder
     private var participantBody: some View {
-        if isLoadingProfile {
+        if viewModel.isLoadingProfile {
             ProgressView()
                 .frame(maxWidth: .infinity)
                 .padding(.top, 40)
-        } else if let participant {
+        } else if let participant = viewModel.participant {
             VStack(alignment: .leading, spacing: 20) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(participant.name)
@@ -192,13 +178,13 @@ struct ProfileView: View {
             VStack(spacing: 12) {
                 Text("Не удалось загрузить профиль")
                     .foregroundColor(.secondary)
-                actionButton(title: "Повторить") { fetchProfile() }
+                actionButton(title: "Повторить") { refresh() }
             }
             .frame(maxWidth: .infinity)
             .padding(.top, 40)
         }
     }
-    
+
     private var participationsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 6) {
@@ -208,13 +194,13 @@ struct ProfileView: View {
                     .frame(width: 40, height: 3)
                     .foregroundColor(.violet)
             }
-            if participations.isEmpty {
+            if viewModel.participations.isEmpty {
                 Text("Пока нет ни одной записи")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             } else {
                 VStack(alignment: .leading, spacing: 12) {
-                    ForEach(participations) { item in
+                    ForEach(viewModel.participations) { item in
                         participationRow(item)
                     }
                 }
@@ -222,9 +208,9 @@ struct ProfileView: View {
             actionButton(title: "Добавить участие") { showingAddParticipation = true }
         }
     }
-    
+
     // MARK: - Private methods
-    
+
     private func profileBanner(initials: String? = nil, systemImage: String? = nil) -> some View {
         ZStack {
             wallpaper
@@ -234,7 +220,7 @@ struct ProfileView: View {
         .frame(maxWidth: .infinity)
         .clipped()
     }
-    
+
     private func avatarBadge(initials: String?, systemImage: String?) -> some View {
         ZStack {
             Circle()
@@ -255,19 +241,19 @@ struct ProfileView: View {
         }
         .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
     }
-    
+
     private func initials(for name: String) -> String {
         let letters = name.split(separator: " ").prefix(2).compactMap { $0.first }
         return String(letters).uppercased()
     }
-    
+
     private func infoSection(participant: Participant) -> some View {
         VStack(alignment: .leading, spacing: 15) {
             infoRow(title: "Телефон:", value: participant.phone.isEmpty ? "—" : participant.phone)
             infoRow(title: "Email:", value: participant.email)
         }
     }
-    
+
     private func infoRow(title: String, value: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title)
@@ -277,7 +263,7 @@ struct ProfileView: View {
                 .font(.system(size: 18, weight: .semibold))
         }
     }
-    
+
     private func participationRow(_ item: Participation) -> some View {
         HStack(alignment: .top, spacing: 10) {
             Text("•")
@@ -292,7 +278,7 @@ struct ProfileView: View {
             }
         }
     }
-    
+
     private func actionButton(title: String, isDestructive: Bool = false, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(title)
@@ -304,53 +290,10 @@ struct ProfileView: View {
                 .cornerRadius(15)
         }
     }
-    
-    // MARK: - Data
-    
-    private func fetchProfile() {
-        guard authManager.isParticipantLoggedIn, let uid = authManager.currentUserId else {
-            participant = nil
-            return
-        }
-        isLoadingProfile = true
-        db.collection("participants").document(uid).getDocument { snapshot, _ in
-            isLoadingProfile = false
-            guard let data = snapshot?.data() else { return }
-            let timestamp = data["createdAt"] as? Timestamp ?? Timestamp()
-            participant = Participant(
-                id: uid,
-                name: data["name"] as? String ?? "",
-                phone: data["phone"] as? String ?? "",
-                role: ParticipantRole(rawValue: data["role"] as? String ?? "") ?? .alpha,
-                email: data["email"] as? String ?? "",
-                createdAt: timestamp.dateValue()
-            )
-        }
-    }
-    
-    private func fetchParticipations() {
-        guard authManager.isParticipantLoggedIn, let uid = authManager.currentUserId else {
-            participations = []
-            return
-        }
-        db.collection("participants").document(uid).collection("participations")
-            .order(by: "eventDate", descending: true)
-            .getDocuments { snapshot, _ in
-                guard let documents = snapshot?.documents else { return }
-                participations = documents.compactMap { doc -> Participation? in
-                    let data = doc.data()
-                    guard let title = data["eventTitle"] as? String,
-                          let timestamp = data["eventDate"] as? Timestamp,
-                          let roleRaw = data["role"] as? String,
-                          let role = ParticipantRole(rawValue: roleRaw) else { return nil }
-                    return Participation(
-                        id: doc.documentID,
-                        eventTitle: title,
-                        eventDate: timestamp.dateValue(),
-                        role: role,
-                        newsId: data["newsId"] as? String
-                    )
-                }
-            }
+
+    private func refresh() {
+        let uid = authManager.isParticipantLoggedIn ? authManager.currentUserId : nil
+        viewModel.fetchProfile(uid: uid)
+        viewModel.fetchParticipations(uid: uid)
     }
 }

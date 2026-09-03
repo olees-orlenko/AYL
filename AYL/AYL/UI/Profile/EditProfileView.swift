@@ -6,34 +6,31 @@
 //
 
 import SwiftUI
-import FirebaseFirestore
 
 struct EditProfileView: View {
-    
+
     // MARK: - Properties
-    
+
     @Environment(\.dismiss) var dismiss
+    @ObservedObject var viewModel: ProfileViewModel
     let participant: Participant
-    var onSaved: (Participant) -> Void
-    
+
     @State private var name: String
     @State private var phone: String
     @State private var role: ParticipantRole
-    @State private var isSaving = false
-    @State private var errorMessage = ""
-    
+
     // MARK: - Init
-    
-    init(participant: Participant, onSaved: @escaping (Participant) -> Void) {
+
+    init(viewModel: ProfileViewModel, participant: Participant) {
+        self.viewModel = viewModel
         self.participant = participant
-        self.onSaved = onSaved
         _name = State(initialValue: participant.name)
         _phone = State(initialValue: participant.phone)
         _role = State(initialValue: participant.role)
     }
-    
+
     // MARK: - Body
-    
+
     var body: some View {
         NavigationStack {
             Form {
@@ -46,8 +43,8 @@ struct EditProfileView: View {
                             Text(role.displayName).tag(role)
                         }
                     }
-                    if !errorMessage.isEmpty {
-                        Text(errorMessage)
+                    if !viewModel.errorMessage.isEmpty {
+                        Text(viewModel.errorMessage)
                             .foregroundColor(.red)
                             .font(.caption)
                     }
@@ -55,7 +52,7 @@ struct EditProfileView: View {
                 Button {
                     save()
                 } label: {
-                    if isSaving {
+                    if viewModel.isSaving {
                         ProgressView()
                             .frame(maxWidth: .infinity)
                     } else {
@@ -64,7 +61,7 @@ struct EditProfileView: View {
                             .bold()
                     }
                 }
-                .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || isSaving)
+                .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || viewModel.isSaving)
             }
             .navigationTitle("Редактирование")
             .navigationBarTitleDisplayMode(.inline)
@@ -75,33 +72,14 @@ struct EditProfileView: View {
             }
         }
     }
-    
+
     // MARK: - Private methods
-    
+
     private func save() {
-        isSaving = true
-        errorMessage = ""
-        let data: [String: Any] = [
-            "name": name.trimmingCharacters(in: .whitespaces),
-            "phone": phone.trimmingCharacters(in: .whitespaces),
-            "role": role.rawValue
-        ]
-        Firestore.firestore().collection("participants").document(participant.id).updateData(data) { error in
-            isSaving = false
-            if let error {
-                errorMessage = error.localizedDescription
-                return
+        viewModel.updateProfile(name: name, phone: phone, role: role) { success in
+            if success {
+                dismiss()
             }
-            let updated = Participant(
-                id: participant.id,
-                name: name.trimmingCharacters(in: .whitespaces),
-                phone: phone.trimmingCharacters(in: .whitespaces),
-                role: role,
-                email: participant.email,
-                createdAt: participant.createdAt
-            )
-            onSaved(updated)
-            dismiss()
         }
     }
 }
