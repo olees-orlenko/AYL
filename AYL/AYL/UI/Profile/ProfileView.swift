@@ -14,6 +14,7 @@ struct ProfileView: View {
     // MARK: - Properties
     
     @EnvironmentObject var authManager: AuthManager
+    @EnvironmentObject var eventSignupManager: EventSignupManager
     @StateObject private var viewModel = ProfileViewModel()
     @State private var showingLogin = false
     @State private var showingRegister = false
@@ -202,6 +203,7 @@ struct ProfileView: View {
                         .foregroundColor(.secondary)
                 }
                 infoSection(participant: participant)
+                upcomingSignupsSection
                 participationsSection
                 actionButton(title: "Редактировать профиль") { showingEdit = true }
                 actionButton(title: "Выйти", isDestructive: true) { authManager.signOut() }
@@ -214,6 +216,48 @@ struct ProfileView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.top, 40)
+        }
+    }
+    
+    @ViewBuilder
+    private var upcomingSignupsSection: some View {
+        if !eventSignupManager.upcomingSignups.isEmpty {
+            VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Планирую пойти")
+                        .font(.title3.bold())
+                    Rectangle()
+                        .frame(width: 40, height: 3)
+                        .foregroundColor(.violet)
+                }
+                VStack(alignment: .leading, spacing: 12) {
+                    ForEach(eventSignupManager.upcomingSignups) { signup in
+                        upcomingSignupRow(signup)
+                    }
+                }
+            }
+        }
+    }
+
+    private func upcomingSignupRow(_ signup: EventSignup) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Text("•")
+                .font(.system(size: 18, weight: .black))
+                .foregroundColor(.lightBlue)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(signup.eventTitle)
+                    .font(.system(size: 16, weight: .semibold))
+                Text(signup.formattedDate)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            Spacer()
+            Button {
+                eventSignupManager.cancelSignup(newsId: signup.newsId)
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .foregroundColor(.secondary)
+            }
         }
     }
     
@@ -367,6 +411,7 @@ struct ProfileView: View {
         let uid = authManager.isParticipantLoggedIn ? authManager.currentUserId : nil
         viewModel.fetchProfile(uid: uid)
         viewModel.fetchParticipations(uid: uid)
+        eventSignupManager.load(uid: uid)
     }
     
     private func handlePhotoPicked(_ item: PhotosPickerItem?) {

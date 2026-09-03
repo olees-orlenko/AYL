@@ -25,7 +25,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         Messaging.messaging().apnsToken = deviceToken
     }
-
+    
     func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
         print("Push: не удалось зарегистрироваться в APNs — \(error.localizedDescription)")
     }
@@ -37,6 +37,7 @@ struct AYLApp: App {
     @State private var scenePhase = ScenePhase.active
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @StateObject var authManager = AuthManager()
+    @StateObject var eventSignupManager = EventSignupManager()
     
     var body: some Scene {
         WindowGroup {
@@ -44,6 +45,13 @@ struct AYLApp: App {
                 .preferredColorScheme(isDarkMode ? .dark : .light)
                 .environment(\.scenePhase, scenePhase)
                 .environmentObject(authManager)
+                .environmentObject(eventSignupManager)
+                .onChange(of: authManager.currentUserId) { _, newValue in
+                    eventSignupManager.load(uid: authManager.isParticipantLoggedIn ? newValue : nil)
+                }
+                .onChange(of: authManager.isParticipantLoggedIn) { _, isParticipant in
+                    eventSignupManager.load(uid: isParticipant ? authManager.currentUserId : nil)
+                }
         }
     }
 }

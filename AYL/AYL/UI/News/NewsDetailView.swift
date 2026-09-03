@@ -14,6 +14,9 @@ struct NewsDetailView: View {
     
     let news: NewsItem
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var authManager: AuthManager
+    @EnvironmentObject var eventSignupManager: EventSignupManager
+    @State private var isTogglingSignup = false
     
     // MARK: - Body
     
@@ -24,6 +27,7 @@ struct NewsDetailView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     titleSection
                     dateSection
+                    signupSection
                     contentSection
                     if !news.linkUrl.isEmpty {
                         footerSection
@@ -77,7 +81,7 @@ struct NewsDetailView: View {
                 .foregroundColor(.violet)
         }
     }
-
+    
     private var dateSection: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
@@ -105,6 +109,42 @@ struct NewsDetailView: View {
             .font(.body)
             .lineSpacing(4)
             .foregroundColor(.primary)
+    }
+    
+    @ViewBuilder
+    private var signupSection: some View {
+        if news.isEvent, authManager.isParticipantLoggedIn, let eventDate = news.eventDate, eventDate > Date() {
+            let isSignedUp = eventSignupManager.isSignedUp(newsId: news.id)
+            VStack(alignment: .leading, spacing: 6) {
+                Button {
+                    toggleSignup(eventDate: eventDate)
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: isSignedUp ? "checkmark.circle.fill" : "person.badge.plus")
+                        Text(isSignedUp ? "Мероприятие добавлено — отменить" : "Я тоже иду")
+                    }
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(isSignedUp ? .minty : .white)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(isSignedUp ? Color.minty.opacity(0.12) : Color.minty)
+                    .cornerRadius(15)
+                }
+                .disabled(isTogglingSignup)
+                Text(news.linkUrl.isEmpty
+                     ? "Это личная пометка в приложении, а не официальная запись"
+                     : "Это личная пометка в приложении. Чтобы попасть на мероприятие, обязательно заполните форму по ссылке ниже («Подробнее»)")
+                .font(.caption2)
+                .foregroundColor(.secondary)
+            }
+        }
+    }
+    
+    private func toggleSignup(eventDate: Date) {
+        isTogglingSignup = true
+        eventSignupManager.toggleSignup(newsId: news.id, eventTitle: news.title, eventDate: eventDate) { _ in
+            isTogglingSignup = false
+        }
     }
     
     private var footerSection: some View {

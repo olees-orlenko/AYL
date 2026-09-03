@@ -1,11 +1,14 @@
 /**
- * Cloud Functions для push-уведомлений приложения AYL.
+ * Cloud Functions для push-уведомлений и личного кабинета приложения AYL.
  *
- * Две функции:
+ * Три функции:
  *  1. onNewsCreated — срабатывает сразу при создании документа в коллекции "News".
  *     Если это мероприятие (isEvent === true), шлёт push всем подписчикам топика "news_all".
  *  2. sendEventReminders — расписание (каждый день в 09:00 по Москве). Находит мероприятия,
  *     которые пройдут завтра, и шлёт напоминание — один раз на мероприятие (флаг reminderSent).
+ *  3. convertPastEventSignups — расписание (каждый день в 03:00 по Москве). Переносит записи
+ *     participants/{uid}/eventSignups, чьё мероприятие уже прошло, в participants/{uid}/participations
+ *     (историю участия) — так "Участие в мероприятиях" в кабинете заполняется само.
  *
  * Деплой: см. README.md рядом с этой папкой.
  */
@@ -130,6 +133,48 @@ export const sendEventReminders = onSchedule(
         logger.info(`sendEventReminders: напоминание по ${doc.id} отправлено`);
       } catch (error) {
         logger.error(`sendEventReminders: ошибка отправки напоминания для ${doc.id}`, error);
+      }
+    }
+  }
+);
+// ──────────────────────────────────────────────────────────────────────────
+// 3. ДОБАВЛЕНО: перенос прошедших записей "я тоже иду" в историю участия
+// ──────────────────────────────────────────────────────────────────────────
+
+export const convertPastEventSignups = onSchedule(
+  { schedule: "0 3 * * *", timeZone: "Europe/Moscow" },
+  async () => {
+    // collectionGroup — ищем eventSignups сразу у ВСЕХ участников, а не по одному.
+    // Требует включённого collection-group индекса по полю eventDate в консоли
+    // Firestore (Indexes → Collection group) — см. README.md.
+    const snapshot = await db
+      .collectionGroup("eventSignups")
+      .where("eventDate", "<", Timestamp.now())
+      .get();
+
+    if (snapshot.empty) {
+      logger.info("convertPastEventSignups: прошедших записей нет");
+      return;
+    }
+
+    for (const doc of snapshot.docs) {
+      const signup = doc.data();
+      const participantRef = doc.ref.parent.parent; // participants/{uid}
+      if (!participantRef) {
+        continue;
+      }
+      try {
+        await participantRef.collection("participations").add({
+          eventTitle: signup.eventTitle,
+          eventDate: signup.eventDate,
+          role: signup.role,
+          newsId: signup.newsId ?? null,
+          createdAt: Timestamp.now(),
+        });
+        await doc.ref.delete();
+        logger.info(`convertPastEventSignups: запись ${doc.id} участника ${participantRef.id} перенесена в участие`);
+      } catch (error) {
+        logger.error(`convertPastEventSignups: ошибка переноса ${doc.id} участника ${participantRef.id}`, error);
       }
     }
   }
