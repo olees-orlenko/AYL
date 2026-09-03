@@ -8,22 +8,21 @@
 import Foundation
 import FirebaseAuth
 import FirebaseFirestore
+import FirebaseStorage
 internal import Combine
 
 final class ProfileViewModel: ObservableObject {
-
-    // MARK: - Properties
-
+    
     @Published var participant: Participant?
     @Published var participations: [Participation] = []
     @Published var isLoadingProfile = false
     @Published var isSaving = false
     @Published var errorMessage = ""
-
+    
     private let db = Firestore.firestore()
-
+    
     // MARK: - Auth (регистрация / вход)
-
+    
     func register(name: String, phone: String, role: ParticipantRole, email: String, password: String, completion: @escaping (Bool) -> Void) {
         errorMessage = ""
         isSaving = true
@@ -59,7 +58,7 @@ final class ProfileViewModel: ObservableObject {
             }
         }
     }
-
+    
     func login(email: String, password: String, completion: @escaping (Bool) -> Void) {
         errorMessage = ""
         isSaving = true
@@ -74,9 +73,9 @@ final class ProfileViewModel: ObservableObject {
             completion(true)
         }
     }
-
+    
     // MARK: - Profile
-
+    
     func fetchProfile(uid: String?) {
         guard let uid else {
             participant = nil
@@ -94,11 +93,12 @@ final class ProfileViewModel: ObservableObject {
                 phone: data["phone"] as? String ?? "",
                 role: ParticipantRole(rawValue: data["role"] as? String ?? "") ?? .alpha,
                 email: data["email"] as? String ?? "",
-                createdAt: timestamp.dateValue()
+                createdAt: timestamp.dateValue(),
+                photoUrl: data["photoUrl"] as? String
             )
         }
     }
-
+    
     func updateProfile(name: String, phone: String, role: ParticipantRole, completion: @escaping (Bool) -> Void) {
         guard let participant else {
             completion(false)
@@ -125,14 +125,71 @@ final class ProfileViewModel: ObservableObject {
                 phone: phone.trimmingCharacters(in: .whitespaces),
                 role: role,
                 email: participant.email,
-                createdAt: participant.createdAt
+                createdAt: participant.createdAt,
+                photoUrl: participant.photoUrl
             )
             completion(true)
         }
     }
-
+    
+    // MARK: - Profile's photo
+    
+    func uploadPhoto(imageData: Data, completion: @escaping (Bool) -> Void) {
+        guard let participant else {
+            completion(false)
+            return
+        }
+        isSaving = true
+        errorMessage = ""
+        let ref = Storage.storage().reference().child("participant_photos/\(participant.id).jpg")
+        let metadata = StorageMetadata()
+        metadata.contentType = "image/jpeg"
+        ref.putData(imageData, metadata: metadata) { [weak self] _, error in
+            guard let self else { return }
+            if let error {
+                self.isSaving = false
+                self.errorMessage = error.localizedDescription
+                completion(false)
+                return
+            }
+            ref.downloadURL { [weak self] url, error in
+                guard let self else { return }
+                self.isSaving = false
+                if let error {
+                    self.errorMessage = error.localizedDescription
+                    completion(false)
+                    return
+                }
+                guard let url else {
+                    self.errorMessage = "Не удалось получить ссылку на фото"
+                    completion(false)
+                    return
+                }
+                self.db.collection("participants").document(participant.id)
+                    .updateData(["photoUrl": url.absoluteString]) { [weak self] error in
+                        guard let self else { return }
+                        if let error {
+                            self.errorMessage = error.localizedDescription
+                            completion(false)
+                            return
+                        }
+                        self.participant = Participant(
+                            id: participant.id,
+                            name: participant.name,
+                            phone: participant.phone,
+                            role: participant.role,
+                            email: participant.email,
+                            createdAt: participant.createdAt,
+                            photoUrl: url.absoluteString
+                        )
+                        completion(true)
+                    }
+            }
+        }
+    }
+    
     // MARK: - Participation
-
+    
     func fetchParticipations(uid: String?) {
         guard let uid else {
             participations = []
@@ -158,7 +215,7 @@ final class ProfileViewModel: ObservableObject {
                 }
             }
     }
-
+    
     func addParticipation(eventTitle: String, eventDate: Date, role: ParticipantRole, completion: @escaping (Bool) -> Void) {
         guard let participant else {
             completion(false)

@@ -40,13 +40,15 @@ struct Participant: Identifiable {
     let role: ParticipantRole
     let email: String
     let createdAt: Date
+    let photoUrl: String?
     
-    init(id: String, name: String, phone: String, role: ParticipantRole, email: String, createdAt: Date) {
+    init(id: String, name: String, phone: String, role: ParticipantRole, email: String, createdAt: Date, photoUrl: String? = nil) {
         self.id = id
         self.name = name
         self.phone = phone
         self.role = role
         self.email = email
         self.createdAt = createdAt
+        self.photoUrl = photoUrl
     }
 }

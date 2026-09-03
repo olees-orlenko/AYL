@@ -6,20 +6,24 @@
 //
 
 import SwiftUI
+import PhotosUI
+import Kingfisher
 
 struct ProfileView: View {
-
+    
     // MARK: - Properties
-
+    
     @EnvironmentObject var authManager: AuthManager
     @StateObject private var viewModel = ProfileViewModel()
     @State private var showingLogin = false
     @State private var showingRegister = false
     @State private var showingEdit = false
     @State private var showingAddParticipation = false
-
+    @State private var selectedPhotoItem: PhotosPickerItem?
+    @State private var isUploadingPhoto = false
+    
     // MARK: - Body
-
+    
     var body: some View {
         NavigationStack {
             ZStack {
@@ -61,25 +65,28 @@ struct ProfileView: View {
             .onChange(of: authManager.isParticipantLoggedIn) { _, _ in
                 refresh()
             }
+            .onChange(of: selectedPhotoItem) { _, newItem in
+                handlePhotoPicked(newItem)
+            }
             .onAppear {
                 refresh()
             }
         }
     }
-
+    
     // MARK: - Subviews
-
+    
     @ViewBuilder
     private var bannerContent: some View {
         if authManager.isAdminLoggedIn {
             profileBanner(systemImage: "checkmark.seal.fill")
         } else if authManager.isParticipantLoggedIn, let participant = viewModel.participant {
-            profileBanner(initials: initials(for: participant.name))
+            participantBanner(participant: participant)
         } else {
             profileBanner(systemImage: "person.fill")
         }
     }
-
+    
     private var wallpaper: some View {
         ZStack {
             LinearGradient(
@@ -106,14 +113,14 @@ struct ProfileView: View {
             }
         }
     }
-
+    
     private var paddedContent: some View {
         VStack(alignment: .leading, spacing: 20) {
             headerSection
             stateBody
         }
     }
-
+    
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Кабинет")
@@ -123,7 +130,7 @@ struct ProfileView: View {
                 .foregroundColor(.violet)
         }
     }
-
+    
     @ViewBuilder
     private var stateBody: some View {
         if authManager.isAdminLoggedIn {
@@ -134,7 +141,7 @@ struct ProfileView: View {
             loggedOutBody
         }
     }
-
+    
     private var loggedOutBody: some View {
         VStack(alignment: .leading, spacing: 20) {
             Text("Войдите в личный кабинет, чтобы записываться на мероприятия и управлять профилем")
@@ -144,7 +151,7 @@ struct ProfileView: View {
             actionButton(title: "Зарегистрироваться") { showingRegister = true }
         }
     }
-
+    
     private var adminBody: some View {
         VStack(alignment: .leading, spacing: 20) {
             Text("Вы вошли как администратор")
@@ -153,7 +160,7 @@ struct ProfileView: View {
             actionButton(title: "Выйти", isDestructive: true) { authManager.signOut() }
         }
     }
-
+    
     @ViewBuilder
     private var participantBody: some View {
         if viewModel.isLoadingProfile {
@@ -184,7 +191,7 @@ struct ProfileView: View {
             .padding(.top, 40)
         }
     }
-
+    
     private var participationsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 6) {
@@ -208,28 +215,65 @@ struct ProfileView: View {
             actionButton(title: "Добавить участие") { showingAddParticipation = true }
         }
     }
-
+    
     // MARK: - Private methods
-
+    
     private func profileBanner(initials: String? = nil, systemImage: String? = nil) -> some View {
         ZStack {
             wallpaper
-            avatarBadge(initials: initials, systemImage: systemImage)
+            avatarBadge(initials: initials, systemImage: systemImage, photoUrl: nil)
         }
         .frame(height: 220)
         .frame(maxWidth: .infinity)
         .clipped()
     }
-
-    private func avatarBadge(initials: String?, systemImage: String?) -> some View {
+    
+    private func participantBanner(participant: Participant) -> some View {
+        ZStack {
+            wallpaper
+            ZStack(alignment: .bottomTrailing) {
+                avatarBadge(initials: initials(for: participant.name), systemImage: nil, photoUrl: participant.photoUrl)
+                photoPickerButton
+            }
+        }
+        .frame(height: 220)
+        .frame(maxWidth: .infinity)
+        .clipped()
+    }
+    
+    private var photoPickerButton: some View {
+        PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
+            ZStack {
+                Circle()
+                    .fill(Color.minty)
+                    .frame(width: 36, height: 36)
+                if isUploadingPhoto {
+                    ProgressView()
+                        .tint(.white)
+                        .scaleEffect(0.7)
+                } else {
+                    Image(systemName: "camera.fill")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.white)
+                }
+            }
+            .overlay(Circle().stroke(Color.white, lineWidth: 2))
+        }
+        .disabled(isUploadingPhoto)
+    }
+    
+    private func avatarBadge(initials: String?, systemImage: String?, photoUrl: String?) -> some View {
         ZStack {
             Circle()
                 .fill(.ultraThinMaterial)
                 .frame(width: 140, height: 140)
-            Circle()
-                .stroke(Color.white, lineWidth: 4)
-                .frame(width: 140, height: 140)
-            if let initials, !initials.isEmpty {
+            if let photoUrl, let url = URL(string: photoUrl) {
+                KFImage(url)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 140, height: 140)
+                    .clipShape(Circle())
+            } else if let initials, !initials.isEmpty {
                 Text(initials)
                     .font(.system(size: 48, weight: .bold))
                     .foregroundColor(.white)
@@ -238,22 +282,25 @@ struct ProfileView: View {
                     .font(.system(size: 48))
                     .foregroundColor(.white)
             }
+            Circle()
+                .stroke(Color.white, lineWidth: 4)
+                .frame(width: 140, height: 140)
         }
         .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
     }
-
+    
     private func initials(for name: String) -> String {
         let letters = name.split(separator: " ").prefix(2).compactMap { $0.first }
         return String(letters).uppercased()
     }
-
+    
     private func infoSection(participant: Participant) -> some View {
         VStack(alignment: .leading, spacing: 15) {
             infoRow(title: "Телефон:", value: participant.phone.isEmpty ? "—" : participant.phone)
             infoRow(title: "Email:", value: participant.email)
         }
     }
-
+    
     private func infoRow(title: String, value: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title)
@@ -263,7 +310,7 @@ struct ProfileView: View {
                 .font(.system(size: 18, weight: .semibold))
         }
     }
-
+    
     private func participationRow(_ item: Participation) -> some View {
         HStack(alignment: .top, spacing: 10) {
             Text("•")
@@ -278,7 +325,7 @@ struct ProfileView: View {
             }
         }
     }
-
+    
     private func actionButton(title: String, isDestructive: Bool = false, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(title)
@@ -290,10 +337,37 @@ struct ProfileView: View {
                 .cornerRadius(15)
         }
     }
-
+    
     private func refresh() {
         let uid = authManager.isParticipantLoggedIn ? authManager.currentUserId : nil
         viewModel.fetchProfile(uid: uid)
         viewModel.fetchParticipations(uid: uid)
+    }
+    
+    private func handlePhotoPicked(_ item: PhotosPickerItem?) {
+        guard let item else { return }
+        Task {
+            isUploadingPhoto = true
+            if let data = try? await item.loadTransferable(type: Data.self),
+               let jpegData = resizedJPEGData(from: data) {
+                viewModel.uploadPhoto(imageData: jpegData) { _ in
+                    isUploadingPhoto = false
+                }
+            } else {
+                isUploadingPhoto = false
+            }
+            selectedPhotoItem = nil
+        }
+    }
+    
+    private func resizedJPEGData(from data: Data, maxDimension: CGFloat = 640, quality: CGFloat = 0.8) -> Data? {
+        guard let image = UIImage(data: data) else { return nil }
+        let scale = min(1, maxDimension / max(image.size.width, image.size.height))
+        let newSize = CGSize(width: image.size.width * scale, height: image.size.height * scale)
+        let renderer = UIGraphicsImageRenderer(size: newSize)
+        let resized = renderer.image { _ in
+            image.draw(in: CGRect(origin: .zero, size: newSize))
+        }
+        return resized.jpegData(compressionQuality: quality)
     }
 }

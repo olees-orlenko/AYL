@@ -12,6 +12,7 @@
 		FC87C4AC2F913A06007F5887 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = FC87C4AB2F913A06007F5887 /* FirebaseAuth */; };
 		FCD95A4E2F9FA44B00B93BEA /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = FCD95A4D2F9FA44B00B93BEA /* Kingfisher */; };
 		FCF6E59B30349D1F0033B2C4 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = FCF6E59A30349D1F0033B2C4 /* FirebaseMessaging */; };
+		FCFD539D3049C1E000F747DD /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = FCFD539C3049C1E000F747DD /* FirebaseStorage */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -49,6 +50,7 @@
 				FCF6E59B30349D1F0033B2C4 /* FirebaseMessaging in Frameworks */,
 				FC87C4AC2F913A06007F5887 /* FirebaseAuth in Frameworks */,
 				FC1651722F8EA4CE00C2CD4C /* FirebaseFirestore in Frameworks */,
+				FCFD539D3049C1E000F747DD /* FirebaseStorage in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -104,6 +106,7 @@
 				FC87C4AB2F913A06007F5887 /* FirebaseAuth */,
 				FCD95A4D2F9FA44B00B93BEA /* Kingfisher */,
 				FCF6E59A30349D1F0033B2C4 /* FirebaseMessaging */,
+				FCFD539C3049C1E000F747DD /* FirebaseStorage */,
 			);
 			productName = AYL;
 			productReference = FC8C2AF62F7575D0000C33CA /* AYL.app */;
@@ -430,6 +433,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = FC16516E2F8EA4CE00C2CD4C /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseMessaging;
+		};
+		FCFD539C3049C1E000F747DD /* FirebaseStorage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FC16516E2F8EA4CE00C2CD4C /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseStorage;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
