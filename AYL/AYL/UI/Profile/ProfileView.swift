@@ -21,6 +21,7 @@ struct ProfileView: View {
     @State private var showingAddParticipation = false
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var isUploadingPhoto = false
+    @AppStorage(pushEnabledDefaultsKey) private var pushEnabled = true
     
     // MARK: - Body
     
@@ -67,6 +68,9 @@ struct ProfileView: View {
             }
             .onChange(of: selectedPhotoItem) { _, newItem in
                 handlePhotoPicked(newItem)
+            }
+            .onChange(of: pushEnabled) { _, newValue in
+                PushNotificationManager.shared.setPushEnabled(newValue)
             }
             .onAppear {
                 refresh()
@@ -117,7 +121,28 @@ struct ProfileView: View {
     private var paddedContent: some View {
         VStack(alignment: .leading, spacing: 20) {
             headerSection
+            pushSettingsSection
             stateBody
+        }
+    }
+    
+    private var pushSettingsSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Уведомления")
+                    .font(.title3.bold())
+                Rectangle()
+                    .frame(width: 40, height: 3)
+                    .foregroundColor(.violet)
+            }
+            Toggle(isOn: $pushEnabled) {
+                Text("Push-уведомления")
+                    .font(.system(size: 16, weight: .medium))
+            }
+            .tint(.minty)
+            Text("О новых мероприятиях и напоминания за день до начала")
+                .font(.caption)
+                .foregroundColor(.secondary)
         }
     }
     
