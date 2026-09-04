@@ -17,8 +17,7 @@ struct ContactsView: View {
     private let websiteURL = "https://ayl.ru"
     private let emailURL = "mailto:info@ayl.ru"
     private let phoneURL = "tel:+79102605829"
-    private let documentsUrlString = "https://ayl.ru/supportus"
-    
+
     // MARK: - Body
     
     var body: some View {
@@ -32,8 +31,6 @@ struct ContactsView: View {
                             detailedInfoSection
                             socialsSection
                             regionsNavigationLink
-                            Spacer(minLength: 10)
-                            helpNavigationLink
                         }
                         .padding(.horizontal, 25)
                         .padding(.top, 10)
@@ -111,20 +108,6 @@ struct ContactsView: View {
                     .foregroundColor(.violet)
             }
             .padding(.vertical, 15)
-        }
-    }
-    
-    private var helpNavigationLink: some View {
-        NavigationLink {
-            DocumentWebView(urlString: documentsUrlString)
-        } label: {
-            Text("Поддержать нас")
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.minty)
-                .cornerRadius(15)
         }
     }
     
