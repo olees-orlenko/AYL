@@ -7,22 +7,17 @@
 
 import SwiftUI
 
-// MARK: - ContactsView
+// MARK: - RegionsView
 
 struct RegionsView: View {
     
     // MARK: - Properties
     
     @Environment(\.dismiss) var dismiss
-    
-    private let tgAltai = "https://t.me/aylaltay"
-    private let tgKrasnodar = "https://t.me/ayl_krd"
-    private let vkKrasnodar = "https://vk.com/ayl_krd"
-    private let siteKrasnodar = "https://aylkrd.tilda.ws/"
-    private let tgBarnaul = "https://t.me/"
-    private let vkBarnaul = "https://vk.com/club241886"
-    private let tgOrel = "https://t.me/AYLOrel"
-    private let tgTomsk = "https://t.me/tomskaul"
+    @StateObject var viewModel = RegionsViewModel()
+    @EnvironmentObject var authManager: AuthManager
+    @State private var showingAddSheet = false
+    @State private var selectedRegion: RegionContact? = nil
     
     // MARK: - Body
     
@@ -38,10 +33,28 @@ struct RegionsView: View {
                 .padding(.top, 20)
                 .padding(.bottom, 40)
             }
+            
+            if viewModel.isLoading {
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle())
+                    .scaleEffect(1.5)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
         }
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
         .toolbar { toolbarContent }
+        .sheet(item: $selectedRegion) { region in
+            RegionEditView(viewModel: viewModel, region: region)
+                .environmentObject(authManager)
+        }
+        .sheet(isPresented: $showingAddSheet) {
+            RegionEditView(viewModel: viewModel, region: nil)
+                .environmentObject(authManager)
+        }
+        .onAppear {
+            viewModel.fetchData()
+        }
     }
     
     // MARK: - Subviews
@@ -63,21 +76,38 @@ struct RegionsView: View {
             .lineSpacing(5)
     }
     
+    @ViewBuilder
     private var regionsList: some View {
-        VStack(alignment: .leading, spacing: 25) {
-            regionRow(name: "Республика Алтай", telegram: tgAltai)
-            regionRow(name: "Краснодарский край",
-                      telegram: tgKrasnodar,
-                      website: siteKrasnodar,
-                      vkontakte: vkKrasnodar)
-            regionRow(name: "Барнаул", vkontakte: vkBarnaul)
-            regionRow(name: "Орёл", telegram: tgOrel)
-            regionRow(name: "Томск", telegram: tgTomsk)
+        if !viewModel.isLoading && viewModel.regions.isEmpty {
+            Text("Список пуст")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(.gray)
+        } else {
+            VStack(alignment: .leading, spacing: 25) {
+                ForEach(viewModel.regions) { region in
+                    regionRow(region)
+                        .contextMenu {
+                            if authManager.isAdminLoggedIn {
+                                Button {
+                                    selectedRegion = region
+                                } label: {
+                                    Label("Редактировать", systemImage: "pencil")
+                                }
+                                Button(role: .destructive) {
+                                    viewModel.deleteRegion(id: region.id)
+                                } label: {
+                                    Label("Удалить", systemImage: "trash")
+                                }
+                            }
+                        }
+                }
+            }
         }
     }
     
     // MARK: - Toolbar
     
+    @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .navigationBarLeading) {
             Button { dismiss() } label: {
@@ -85,28 +115,38 @@ struct RegionsView: View {
                     .foregroundColor(.primary)
             }
         }
+        if authManager.isAdminLoggedIn {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    showingAddSheet = true
+                } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.title2)
+                }
+            }
+        }
     }
     
     // MARK: - Helpers
     
-    private func regionRow(name: String, telegram: String? = nil, website: String? = nil, vkontakte: String? = nil) -> some View {
+    private func regionRow(_ region: RegionContact) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 12) {
                 Image("ayl1")
                     .resizable()
                     .scaledToFit()
                     .frame(width: 24, height: 24)
-                Text(name)
+                Text(region.name)
                     .font(.system(size: 20, weight: .bold))
             }
             VStack(alignment: .leading, spacing: 6) {
-                if let tg = telegram {
+                if let tg = region.telegramLink, !tg.isEmpty {
                     linkItem(title: "Телеграм-канал", url: tg)
                 }
-                if let site = website {
+                if let site = region.websiteLink, !site.isEmpty {
                     linkItem(title: "Сайт", url: site)
                 }
-                if let vk = vkontakte {
+                if let vk = region.vkLink, !vk.isEmpty {
                     linkItem(title: "Вконтакте", url: vk)
                 }
             }
