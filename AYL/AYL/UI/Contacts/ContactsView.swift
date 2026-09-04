@@ -11,13 +11,10 @@ struct ContactsView: View {
     
     // MARK: - Properties
     
-    private let telegramURL = "https://t.me/aylrus"
-    private let vkURL = "https://vk.com/aylrussia"
-    private let youtubeURL = "https://www.youtube.com/@AYL_Russia"
-    private let websiteURL = "https://ayl.ru"
-    private let emailURL = "mailto:info@ayl.ru"
-    private let phoneURL = "tel:+79102605829"
-
+    @StateObject private var viewModel = ContactsViewModel()
+    @EnvironmentObject var authManager: AuthManager
+    @State private var showingEdit = false
+    
     // MARK: - Body
     
     var body: some View {
@@ -44,6 +41,26 @@ struct ContactsView: View {
                 ToolbarItem(placement: .principal) {
                     Color.clear.frame(height: 0)
                 }
+                if authManager.isAdminLoggedIn {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button {
+                            showingEdit = true
+                        } label: {
+                            Image(systemName: "pencil.circle.fill")
+                                .font(.title2)
+                        }
+                    }
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button("Выйти") { authManager.signOut() }
+                    }
+                }
+            }
+            .sheet(isPresented: $showingEdit) {
+                ContactsEditView(viewModel: viewModel)
+                    .environmentObject(authManager)
+            }
+            .onAppear {
+                viewModel.fetchData()
             }
         }
     }
@@ -75,19 +92,19 @@ struct ContactsView: View {
     
     private var detailedInfoSection: some View {
         VStack(alignment: .leading, spacing: 15) {
-            contactLinkItem(title: "Сайт:", value: "ayl.ru", url: websiteURL)
-            emailButtonItem(title: "Электронная почта:", value: "info@ayl.ru", url: emailURL)
-            phoneButtonItem(title: "Телефон:", value: "+7 (910) 260-58-29", url: phoneURL)
-            Text("Исполнительный директор\nАлёна Коваленко")
+            contactLinkItem(title: "Сайт:", value: viewModel.info.websiteDisplay, url: viewModel.info.website)
+            emailButtonItem(title: "Электронная почта:", value: viewModel.info.email, url: viewModel.info.emailURL)
+            phoneButtonItem(title: "Телефон:", value: viewModel.info.phone, url: viewModel.info.phoneURL)
+            Text("\(viewModel.info.directorTitle)\n\(viewModel.info.directorName)")
                 .font(.body)
         }
     }
     
     private var socialsSection: some View {
         HStack(spacing: 25) {
-            socialCircleButton(systemIcon: "paperplane.fill", url: telegramURL)
-            socialCircleButton(systemIcon: "play.fill", url: youtubeURL)
-            socialCircleButton(imageName: "vk_logo", url: vkURL)
+            socialCircleButton(systemIcon: "paperplane.fill", url: viewModel.info.telegram)
+            socialCircleButton(systemIcon: "play.fill", url: viewModel.info.youtube)
+            socialCircleButton(imageName: "vk_logo", url: viewModel.info.vk)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
