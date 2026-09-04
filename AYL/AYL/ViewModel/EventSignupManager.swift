@@ -13,6 +13,7 @@ final class EventSignupManager: ObservableObject {
     
     @Published var signedUpNewsIds: Set<String> = []
     @Published var upcomingSignups: [EventSignup] = []
+    @Published var errorMessage = ""
     
     private let db = Firestore.firestore()
     private var currentUid: String?
@@ -71,10 +72,14 @@ final class EventSignupManager: ObservableObject {
         db.collection("participants").document(uid).collection("eventSignups").document(newsId)
             .setData(data) { [weak self] error in
                 guard let self else { return }
-                if error == nil {
+                if let error {
+                    print("EventSignup: не удалось записаться на \(newsId) — \(error.localizedDescription)")
+                    self.errorMessage = error.localizedDescription
+                } else {
                     self.signedUpNewsIds.insert(newsId)
                     self.upcomingSignups.append(EventSignup(id: newsId, newsId: newsId, eventTitle: eventTitle, eventDate: eventDate, role: self.currentRole))
                     self.upcomingSignups.sort { $0.eventDate < $1.eventDate }
+                    CalendarManager.shared.addEvent(newsId: newsId, title: eventTitle, startDate: eventDate)
                 }
                 completion(error == nil)
             }
@@ -88,9 +93,13 @@ final class EventSignupManager: ObservableObject {
         db.collection("participants").document(uid).collection("eventSignups").document(newsId)
             .delete { [weak self] error in
                 guard let self else { return }
-                if error == nil {
+                if let error {
+                    print("EventSignup: не удалось отменить запись \(newsId) — \(error.localizedDescription)")
+                    self.errorMessage = error.localizedDescription
+                } else {
                     self.signedUpNewsIds.remove(newsId)
                     self.upcomingSignups.removeAll { $0.newsId == newsId }
+                    CalendarManager.shared.removeEvent(newsId: newsId)
                 }
                 completion(error == nil)
             }
