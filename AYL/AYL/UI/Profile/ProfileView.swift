@@ -238,7 +238,7 @@ struct ProfileView: View {
             }
         }
     }
-
+    
     private func upcomingSignupRow(_ signup: EventSignup) -> some View {
         HStack(alignment: .top, spacing: 10) {
             Text("•")
@@ -390,6 +390,14 @@ struct ProfileView: View {
                     .font(.system(size: 16, weight: .semibold))
                 Text("\(item.formattedDate) · \(item.role.displayName)")
                     .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            Spacer()
+            
+            Button {
+                viewModel.deleteParticipation(item)
+            } label: {
+                Image(systemName: "xmark.circle.fill")
                     .foregroundColor(.secondary)
             }
         }

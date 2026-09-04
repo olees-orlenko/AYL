@@ -243,4 +243,24 @@ final class ProfileViewModel: ObservableObject {
                 completion(true)
             }
     }
+    
+    func deleteParticipation(_ participation: Participation, completion: @escaping (Bool) -> Void = { _ in }) {
+        guard let participant else {
+            completion(false)
+            return
+        }
+        db.collection("participants").document(participant.id)
+            .collection("participations").document(participation.id)
+            .delete { [weak self] error in
+                guard let self else { return }
+                if let error {
+                    print("Participation: не удалось удалить \(participation.id) — \(error.localizedDescription)")
+                    self.errorMessage = error.localizedDescription
+                    completion(false)
+                    return
+                }
+                self.participations.removeAll { $0.id == participation.id }
+                completion(true)
+            }
+    }
 }
