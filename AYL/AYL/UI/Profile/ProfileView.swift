@@ -16,6 +16,7 @@ struct ProfileView: View {
     @EnvironmentObject var authManager: AuthManager
     @EnvironmentObject var eventSignupManager: EventSignupManager
     @StateObject private var viewModel = ProfileViewModel()
+    @StateObject private var requestsViewModel = ContactRequestsViewModel()
     @State private var showingLogin = false
     @State private var showingRegister = false
     @State private var showingEdit = false
@@ -203,6 +204,7 @@ struct ProfileView: View {
                         .foregroundColor(.secondary)
                 }
                 infoSection(participant: participant)
+                contactRequestsSection
                 upcomingSignupsSection
                 participationsSection
                 actionButton(title: "Редактировать профиль") { showingEdit = true }
@@ -234,6 +236,57 @@ struct ProfileView: View {
                     ForEach(eventSignupManager.upcomingSignups) { signup in
                         upcomingSignupRow(signup)
                     }
+                }
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var contactRequestsSection: some View {
+        if !requestsViewModel.incomingRequests.isEmpty {
+            VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Запросы на контакты")
+                        .font(.title3.bold())
+                    Rectangle()
+                        .frame(width: 40, height: 3)
+                        .foregroundColor(.violet)
+                }
+                VStack(alignment: .leading, spacing: 12) {
+                    ForEach(requestsViewModel.incomingRequests) { request in
+                        contactRequestRow(request)
+                    }
+                }
+            }
+        }
+    }
+    
+    private func contactRequestRow(_ request: ContactRequest) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("\(request.fromName) хочет узнать ваши контакты")
+                .font(.system(size: 15, weight: .medium))
+            HStack(spacing: 10) {
+                Button {
+                    approveContactRequest(request)
+                } label: {
+                    Text("Разрешить")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(Color.minty)
+                        .cornerRadius(10)
+                }
+                Button {
+                    requestsViewModel.decline(request)
+                } label: {
+                    Text("Отклонить")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.secondary)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(Color.gray.opacity(0.1))
+                        .cornerRadius(10)
                 }
             }
         }
@@ -420,6 +473,12 @@ struct ProfileView: View {
         viewModel.fetchProfile(uid: uid)
         viewModel.fetchParticipations(uid: uid)
         eventSignupManager.load(uid: uid)
+        requestsViewModel.observeIncoming(uid: uid)
+    }
+    
+    private func approveContactRequest(_ request: ContactRequest) {
+        guard let participant = viewModel.participant else { return }
+        requestsViewModel.approve(request, phone: participant.phone, email: participant.email)
     }
     
     private func handlePhotoPicked(_ item: PhotosPickerItem?) {
