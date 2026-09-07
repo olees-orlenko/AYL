@@ -18,7 +18,9 @@ struct MainView: View {
     @State private var tapCount = 0
     @State private var showingLogin = false
     @State private var showingProfile = false
-    
+    @EnvironmentObject var authManager: AuthManager
+    @State private var showingQuiz = false
+
     // MARK: - Body
     
     var body: some View {
@@ -41,6 +43,14 @@ struct MainView: View {
                             .foregroundColor(.lightBlue)
                     }
                 }
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button {
+                        showingQuiz = true
+                    } label: {
+                        Image(systemName: "trophy.fill")
+                            .foregroundColor(.lightBlue)
+                    }
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         isDarkMode.toggle()
@@ -55,6 +65,10 @@ struct MainView: View {
             }
             .sheet(isPresented: $showingProfile) {
                 ProfileView()
+            }
+            .sheet(isPresented: $showingQuiz) {
+                QuizHomeView()
+                    .environmentObject(authManager)
             }
         }
     }
