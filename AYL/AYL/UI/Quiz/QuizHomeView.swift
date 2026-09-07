@@ -5,6 +5,7 @@
 //  Created by Олеся Орленко on 07.09.2026.
 //
 
+
 import SwiftUI
 
 struct QuizHomeView: View {
@@ -22,29 +23,51 @@ struct QuizHomeView: View {
     
     var body: some View {
         NavigationStack {
-            VStack(alignment: .leading, spacing: 20) {
-                headerSection
-                if authManager.isParticipantLoggedIn || authManager.isAdminLoggedIn {
-                    actionButton(title: "Пройти квиз", systemImage: "questionmark.circle.fill") {
-                        showingPlay = true
-                    }
-                    actionButton(title: "Рейтинг участников", systemImage: "list.number") {
-                        showingLeaderboard = true
-                    }
-                    if authManager.isAdminLoggedIn {
-                        actionButton(title: "Управление вопросами", systemImage: "gearshape.fill") {
-                            showingAdmin = true
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    banner
+                        .padding(.horizontal, -25)
+                    headerSection
+                    if authManager.isParticipantLoggedIn || authManager.isAdminLoggedIn {
+                        VStack(spacing: 14) {
+                            actionCard(
+                                title: "Пройти квиз",
+                                subtitle: "Проверь себя и попади в рейтинг",
+                                systemImage: "questionmark.circle.fill",
+                                tint: .minty
+                            ) {
+                                showingPlay = true
+                            }
+                            actionCard(
+                                title: "Рейтинг участников",
+                                subtitle: "Лучшие результаты всех участников",
+                                systemImage: "list.number",
+                                tint: .violet
+                            ) {
+                                showingLeaderboard = true
+                            }
+                            if authManager.isAdminLoggedIn {
+                                actionCard(
+                                    title: "Управление вопросами",
+                                    subtitle: "Добавить, изменить или удалить вопрос",
+                                    systemImage: "gearshape.fill",
+                                    tint: .lightBlue
+                                ) {
+                                    showingAdmin = true
+                                }
+                            }
                         }
+                    } else {
+                        Text("Войдите в личный кабинет участника (иконка профиля рядом), чтобы пройти квиз и увидеть рейтинг")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
                     }
-                } else {
-                    Text("Войдите в личный кабинет участника (иконка профиля рядом), чтобы пройти квиз и увидеть рейтинг")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                    Spacer()
                 }
-                Spacer()
+                .padding(.horizontal, 25)
+                .padding(.top, 0)
+                .padding(.bottom, 40)
             }
-            .padding(.horizontal, 25)
-            .padding(.top, 20)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -53,6 +76,10 @@ struct QuizHomeView: View {
             }
             .fullScreenCover(isPresented: $showingPlay) {
                 QuizPlayView(viewModel: viewModel)
+                    .environmentObject(authManager)
+            }
+            .sheet(isPresented: $showingLeaderboard) {
+                QuizLeaderboardView(viewModel: viewModel)
                     .environmentObject(authManager)
             }
             .sheet(isPresented: $showingAdmin) {
@@ -67,6 +94,40 @@ struct QuizHomeView: View {
     
     // MARK: - Subviews
     
+    private var banner: some View {
+        ZStack {
+            LinearGradient(
+                colors: [Color.lightBlue, Color.violet, Color.minty],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            GeometryReader { geo in
+                ZStack {
+                    Circle()
+                        .fill(Color.white.opacity(0.25))
+                        .frame(width: geo.size.width * 0.8)
+                        .offset(x: -geo.size.width * 0.25, y: -geo.size.height * 0.3)
+                    Circle()
+                        .fill(Color.minty.opacity(0.85))
+                        .frame(width: geo.size.width * 0.7)
+                        .offset(x: geo.size.width * 0.3, y: geo.size.height * 0.2)
+                    Circle()
+                        .fill(Color.violet.opacity(0.75))
+                        .frame(width: geo.size.width * 0.55)
+                        .offset(x: -geo.size.width * 0.1, y: geo.size.height * 0.45)
+                }
+                .blur(radius: 40)
+            }
+            Image("ayl_logo_1")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .offset(y: 10)
+        }
+        .frame(height: 160)
+        .frame(maxWidth: .infinity)
+        .clipped()
+    }
+    
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Квиз")
@@ -75,24 +136,38 @@ struct QuizHomeView: View {
                 .frame(width: 50, height: 4)
                 .foregroundColor(.violet)
         }
-        .padding(.top, 10)
     }
     
-    private func actionButton(title: String, systemImage: String, action: @escaping () -> Void) -> some View {
+    private func actionCard(title: String, subtitle: String, systemImage: String, tint: Color, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            HStack {
-                Image(systemName: systemImage)
-                Text(title)
-                    .font(.system(size: 16, weight: .semibold))
+            HStack(spacing: 14) {
+                ZStack {
+                    Circle()
+                        .fill(tint)
+                        .frame(width: 52, height: 52)
+                    Image(systemName: systemImage)
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundColor(.white)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.primary)
+                    Text(subtitle)
+                        .font(.system(size: 13))
+                        .foregroundColor(.secondary)
+                }
                 Spacer()
                 Image(systemName: "chevron.right")
                     .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.secondary)
             }
-            .foregroundColor(.white)
-            .padding()
-            .background(Color.minty)
-            .cornerRadius(15)
+            .padding(14)
+            .background(Color(.secondarySystemBackground))
+            .cornerRadius(18)
+            .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 4)
         }
+        .buttonStyle(PlainButtonStyle())
     }
 }
 

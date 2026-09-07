@@ -47,7 +47,7 @@ struct MainView: View {
                             showingQuiz = true
                         } label: {
                             Image(systemName: "trophy.fill")
-                                .foregroundColor(.minty)
+                                .foregroundColor(.lightBlue)
                         }
                     }
                 }

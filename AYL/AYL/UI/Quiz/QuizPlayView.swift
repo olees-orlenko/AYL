@@ -6,23 +6,23 @@
 //
 
 import SwiftUI
-
+ 
 struct QuizPlayView: View {
-    
+ 
     // MARK: - Properties
-    
+ 
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var authManager: AuthManager
     @ObservedObject var viewModel: QuizViewModel
-    
+ 
     @State private var currentIndex = 0
     @State private var selectedOption: Int? = nil
     @State private var score = 0
     @State private var isFinished = false
     @State private var isSaving = false
-    
+ 
     // MARK: - Body
-    
+ 
     var body: some View {
         NavigationStack {
             VStack {
@@ -44,9 +44,9 @@ struct QuizPlayView: View {
             }
         }
     }
-    
+ 
     // MARK: - Subviews
-    
+ 
     private var emptyState: some View {
         VStack(spacing: 12) {
             Spacer()
@@ -55,10 +55,29 @@ struct QuizPlayView: View {
             Spacer()
         }
     }
-    
+
+    private var progressBar: some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                Capsule()
+                    .fill(Color.gray.opacity(0.15))
+                Capsule()
+                    .fill(Color.minty)
+                    .frame(width: geo.size.width * progressFraction)
+            }
+        }
+        .frame(height: 8)
+    }
+ 
+    private var progressFraction: CGFloat {
+        guard !viewModel.questions.isEmpty else { return 0 }
+        return CGFloat(currentIndex) / CGFloat(viewModel.questions.count)
+    }
+ 
     private var questionView: some View {
         let question = viewModel.questions[currentIndex]
         return VStack(alignment: .leading, spacing: 20) {
+            progressBar
             Text("Вопрос \(currentIndex + 1) из \(viewModel.questions.count)")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
@@ -84,31 +103,60 @@ struct QuizPlayView: View {
             .disabled(selectedOption == nil)
         }
     }
-    
+
     private func optionButton(text: String, index: Int) -> some View {
-        Button {
+        let isSelected = selectedOption == index
+        return Button {
             selectedOption = index
         } label: {
-            HStack {
-                Text(text)
-                Spacer()
-                if selectedOption == index {
-                    Image(systemName: "checkmark.circle.fill")
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(isSelected ? Color.minty : Color.gray.opacity(0.15))
+                        .frame(width: 32, height: 32)
+                    if isSelected {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(.white)
+                    } else {
+                        Text(optionLetter(for: index))
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.secondary)
+                    }
                 }
+                Text(text)
+                    .foregroundColor(isSelected ? .minty : .primary)
+                Spacer()
             }
             .padding()
-            .background(selectedOption == index ? Color.minty.opacity(0.15) : Color.gray.opacity(0.08))
-            .foregroundColor(selectedOption == index ? .minty : .primary)
-            .cornerRadius(12)
+            .background(isSelected ? Color.minty.opacity(0.12) : Color(.secondarySystemBackground))
+            .cornerRadius(14)
+            .shadow(color: Color.black.opacity(isSelected ? 0.08 : 0.03), radius: 6, x: 0, y: 3)
         }
     }
-    
+ 
+    private func optionLetter(for index: Int) -> String {
+        let letters = ["А", "Б", "В", "Г", "Д", "Е"]
+        return letters.indices.contains(index) ? letters[index] : "\(index + 1)"
+    }
+ 
     private var resultView: some View {
         VStack(spacing: 20) {
             Spacer()
-            Image(systemName: "rosette")
-                .font(.system(size: 60))
-                .foregroundColor(.violet)
+            ZStack {
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [Color.lightBlue, Color.violet, Color.minty],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 120, height: 120)
+                Image(systemName: "rosette")
+                    .font(.system(size: 50))
+                    .foregroundColor(.white)
+            }
             Text("\(score) из \(viewModel.questions.count)")
                 .font(.largeTitle.bold())
             Text(isSaving ? "Сохраняем результат…" : "Результат сохранён")
@@ -129,9 +177,9 @@ struct QuizPlayView: View {
             .disabled(isSaving)
         }
     }
-    
+ 
     // MARK: - Private methods
-    
+ 
     private func nextQuestion() {
         guard let selectedOption else { return }
         if selectedOption == viewModel.questions[currentIndex].correctIndex {
@@ -144,7 +192,7 @@ struct QuizPlayView: View {
             currentIndex += 1
         }
     }
-    
+ 
     private func finish() {
         isFinished = true
         guard let uid = authManager.currentUserId else { return }
