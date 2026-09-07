@@ -60,6 +60,14 @@ struct QuizQuestionsAdminView: View {
                     }
                 }
             }
+            .sheet(item: $selectedQuestion) { question in
+                QuizQuestionEditView(viewModel: viewModel, question: question)
+                    .environmentObject(authManager)
+            }
+            .sheet(isPresented: $showingAddSheet) {
+                QuizQuestionEditView(viewModel: viewModel, question: nil)
+                    .environmentObject(authManager)
+            }
         }
     }
     

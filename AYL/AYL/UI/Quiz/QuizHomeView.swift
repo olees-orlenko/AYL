@@ -24,7 +24,7 @@ struct QuizHomeView: View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 20) {
                 headerSection
-                if authManager.isParticipantLoggedIn {
+                if authManager.isParticipantLoggedIn || authManager.isAdminLoggedIn {
                     actionButton(title: "Пройти квиз", systemImage: "questionmark.circle.fill") {
                         showingPlay = true
                     }
@@ -58,6 +58,9 @@ struct QuizHomeView: View {
             .sheet(isPresented: $showingAdmin) {
                 QuizQuestionsAdminView(viewModel: viewModel)
                     .environmentObject(authManager)
+            }
+            .onAppear {
+                viewModel.fetchQuestions()
             }
         }
     }
