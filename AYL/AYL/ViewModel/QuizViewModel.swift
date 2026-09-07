@@ -138,6 +138,35 @@ class QuizViewModel: ObservableObject {
         }
     }
     
+    // MARK: - Participation in Events
+    
+    func fetchParticipations(uid: String, completion: @escaping ([Participation]) -> Void) {
+        db.collection("participants").document(uid).collection("participations")
+            .order(by: "eventDate", descending: true)
+            .getDocuments { snapshot, error in
+                guard let documents = snapshot?.documents else {
+                    print("Ошибка загрузки участия: \(error?.localizedDescription ?? "unknown")")
+                    completion([])
+                    return
+                }
+                let items = documents.compactMap { doc -> Participation? in
+                    let data = doc.data()
+                    guard let title = data["eventTitle"] as? String,
+                          let timestamp = data["eventDate"] as? Timestamp,
+                          let roleRaw = data["role"] as? String,
+                          let role = ParticipantRole(rawValue: roleRaw) else { return nil }
+                    return Participation(
+                        id: doc.documentID,
+                        eventTitle: title,
+                        eventDate: timestamp.dateValue(),
+                        role: role,
+                        newsId: data["newsId"] as? String
+                    )
+                }
+                completion(items)
+            }
+    }
+    
     func submitResult(uid: String, name: String, role: ParticipantRole, photoUrl: String?, score: Int, total: Int, completion: @escaping (Bool) -> Void = { _ in }) {
         let ref = db.collection("PublicProfiles").document(uid)
         ref.getDocument { snapshot, _ in

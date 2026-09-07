@@ -43,7 +43,7 @@ struct QuizLeaderboardView: View {
                 }
             }
             .sheet(item: $selectedProfile) { profile in
-                QuizParticipantProfileView(profile: profile)
+                QuizParticipantProfileView(profile: profile, viewModel: viewModel)
                     .environmentObject(authManager)
             }
             .onAppear {
@@ -101,4 +101,3 @@ struct QuizLeaderboardView: View {
         }
     }
 }
-
