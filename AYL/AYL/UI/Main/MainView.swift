@@ -20,7 +20,7 @@ struct MainView: View {
     @State private var showingProfile = false
     @EnvironmentObject var authManager: AuthManager
     @State private var showingQuiz = false
-
+    
     // MARK: - Body
     
     var body: some View {
@@ -36,19 +36,19 @@ struct MainView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button {
-                        showingProfile = true
-                    } label: {
-                        Image(systemName: "person.crop.circle")
-                            .foregroundColor(.lightBlue)
-                    }
-                }
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button {
-                        showingQuiz = true
-                    } label: {
-                        Image(systemName: "trophy.fill")
-                            .foregroundColor(.lightBlue)
+                    HStack(spacing: 16) {
+                        Button {
+                            showingProfile = true
+                        } label: {
+                            Image(systemName: "person.crop.circle")
+                                .foregroundColor(.lightBlue)
+                        }
+                        Button {
+                            showingQuiz = true
+                        } label: {
+                            Image(systemName: "trophy.fill")
+                                .foregroundColor(.minty)
+                        }
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
