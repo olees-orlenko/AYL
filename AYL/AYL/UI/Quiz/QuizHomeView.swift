@@ -13,6 +13,7 @@ struct QuizHomeView: View {
     
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var authManager: AuthManager
+    @StateObject private var viewModel = QuizViewModel()
     @State private var showingPlay = false
     @State private var showingLeaderboard = false
     @State private var showingAdmin = false
@@ -49,6 +50,14 @@ struct QuizHomeView: View {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Закрыть") { dismiss() }
                 }
+            }
+            .fullScreenCover(isPresented: $showingPlay) {
+                QuizPlayView(viewModel: viewModel)
+                    .environmentObject(authManager)
+            }
+            .sheet(isPresented: $showingAdmin) {
+                QuizQuestionsAdminView(viewModel: viewModel)
+                    .environmentObject(authManager)
             }
         }
     }
