@@ -203,6 +203,7 @@ struct ProfileView: View {
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
+                badgesSection
                 infoSection(participant: participant)
                 contactRequestsSection
                 upcomingSignupsSection
@@ -338,6 +339,52 @@ struct ProfileView: View {
         }
     }
     
+    private var badgesSection: some View {
+        let badges = BadgeCatalog.badges(
+            participationsCount: viewModel.participations.count,
+            quizBestScore: viewModel.quizBestScore,
+            quizBestTotal: viewModel.quizBestTotal,
+            isTopThreeInQuiz: viewModel.isTopThreeInQuiz
+        )
+        return VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Достижения")
+                    .font(.title3.bold())
+                Rectangle()
+                    .frame(width: 40, height: 3)
+                    .foregroundColor(.violet)
+            }
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 3), spacing: 14) {
+                ForEach(badges) { badge in
+                    badgeCell(badge)
+                }
+            }
+        }
+    }
+    
+    private func badgeCell(_ badge: Badge) -> some View {
+        VStack(spacing: 6) {
+            ZStack {
+                Circle()
+                    .fill(badge.isUnlocked ? badge.tint : Color.gray.opacity(0.15))
+                    .frame(width: 56, height: 56)
+                Image(systemName: badge.systemImage)
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundColor(badge.isUnlocked ? .white : .secondary)
+            }
+            Text(badge.title)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundColor(badge.isUnlocked ? .primary : .secondary)
+                .multilineTextAlignment(.center)
+            Text(badge.subtitle)
+                .font(.system(size: 10))
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .opacity(badge.isUnlocked ? 1 : 0.6)
+        .frame(maxWidth: .infinity)
+    }
+    
     // MARK: - Private methods
     
     private func profileBanner(initials: String? = nil, systemImage: String? = nil) -> some View {
@@ -446,7 +493,6 @@ struct ProfileView: View {
                     .foregroundColor(.secondary)
             }
             Spacer()
-            
             Button {
                 viewModel.deleteParticipation(item)
             } label: {
@@ -474,6 +520,7 @@ struct ProfileView: View {
         viewModel.fetchParticipations(uid: uid)
         eventSignupManager.load(uid: uid)
         requestsViewModel.observeIncoming(uid: uid)
+        viewModel.fetchQuizSummary(uid: uid)
     }
     
     private func approveContactRequest(_ request: ContactRequest) {

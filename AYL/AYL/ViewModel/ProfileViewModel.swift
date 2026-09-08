@@ -5,6 +5,7 @@
 //  Created by Олеся Орленко on 03.09.2026.
 //
 
+
 import Foundation
 import FirebaseAuth
 import FirebaseFirestore
@@ -13,15 +14,20 @@ internal import Combine
 
 final class ProfileViewModel: ObservableObject {
     
+    // MARK: - Properties
+    
     @Published var participant: Participant?
     @Published var participations: [Participation] = []
     @Published var isLoadingProfile = false
     @Published var isSaving = false
     @Published var errorMessage = ""
+    @Published var quizBestScore: Int = 0
+    @Published var quizBestTotal: Int = 0
+    @Published var isTopThreeInQuiz: Bool = false
     
     private let db = Firestore.firestore()
     
-    // MARK: - Auth (регистрация / вход)
+    // MARK: - Auth
     
     func register(name: String, phone: String, role: ParticipantRole, email: String, password: String, completion: @escaping (Bool) -> Void) {
         errorMessage = ""
@@ -213,6 +219,29 @@ final class ProfileViewModel: ObservableObject {
                         newsId: data["newsId"] as? String
                     )
                 }
+            }
+    }
+    
+    // MARK: - Achievment
+    
+    func fetchQuizSummary(uid: String?) {
+        guard let uid else {
+            quizBestScore = 0
+            quizBestTotal = 0
+            isTopThreeInQuiz = false
+            return
+        }
+        db.collection("PublicProfiles").document(uid).getDocument { [weak self] snapshot, _ in
+            guard let self else { return }
+            self.quizBestScore = snapshot?.data()?["quizBestScore"] as? Int ?? 0
+            self.quizBestTotal = snapshot?.data()?["quizBestTotal"] as? Int ?? 0
+        }
+        db.collection("PublicProfiles")
+            .order(by: "quizBestScore", descending: true)
+            .limit(to: 3)
+            .getDocuments { [weak self] snapshot, _ in
+                guard let self else { return }
+                self.isTopThreeInQuiz = snapshot?.documents.contains { $0.documentID == uid } ?? false
             }
     }
     
