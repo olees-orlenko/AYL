@@ -60,7 +60,9 @@ struct StaffView: View {
                     .padding(.top, 20)
                     .padding(.bottom, 40)
                 }
-                
+                .refreshable {
+                    viewModel.fetchData()
+                }
                 if viewModel.isLoading {
                     ProgressView()
                         .progressViewStyle(CircularProgressViewStyle())

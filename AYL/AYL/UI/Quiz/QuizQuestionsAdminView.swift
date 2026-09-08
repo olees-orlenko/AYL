@@ -44,6 +44,9 @@ struct QuizQuestionsAdminView: View {
                     .onDelete(perform: deleteQuestions)
                 }
             }
+            .refreshable {
+                viewModel.fetchQuestions()
+            }
             .navigationTitle("Вопросы квиза")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

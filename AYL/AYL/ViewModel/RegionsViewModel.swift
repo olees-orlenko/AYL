@@ -16,7 +16,6 @@ class RegionsViewModel: ObservableObject {
     @Published var regions = [RegionContact]()
     @Published var isLoading = true
     private var db = Firestore.firestore()
-    private var listener: ListenerRegistration?
     
     // MARK: - Data Fetching
     
@@ -24,15 +23,11 @@ class RegionsViewModel: ObservableObject {
         if regions.isEmpty {
             isLoading = true
         }
-        listener?.remove()
-        let regionsCollection = db.collection("Regions")
-        listener = regionsCollection.addSnapshotListener { querySnapshot, error in
-            if querySnapshot != nil {
-                self.isLoading = false
-            }
+        db.collection("Regions").getDocuments { [weak self] querySnapshot, error in
+            guard let self else { return }
+            self.isLoading = false
             guard let documents = querySnapshot?.documents else {
                 print("Ошибка: \(error?.localizedDescription ?? "Unknown error")")
-                self.isLoading = false
                 return
             }
             let fetched = documents.compactMap { doc -> RegionContact? in
@@ -51,10 +46,6 @@ class RegionsViewModel: ObservableObject {
         }
     }
     
-    deinit {
-        listener?.remove()
-    }
-    
     // MARK: - Admin Actions (Add/Update/Delete)
     
     func addRegion(name: String, telegramLink: String, vkLink: String, websiteLink: String) {
@@ -64,10 +55,12 @@ class RegionsViewModel: ObservableObject {
             "vkLink": vkLink,
             "websiteLink": websiteLink
         ]
-        db.collection("Regions").addDocument(data: newRegion) { error in
+        db.collection("Regions").addDocument(data: newRegion) { [weak self] error in
             if let error = error {
                 print("Ошибка добавления региона: \(error.localizedDescription)")
+                return
             }
+            self?.fetchData()
         }
     }
     
@@ -78,18 +71,22 @@ class RegionsViewModel: ObservableObject {
             "vkLink": vkLink,
             "websiteLink": websiteLink
         ]
-        db.collection("Regions").document(id).updateData(updatedData) { error in
+        db.collection("Regions").document(id).updateData(updatedData) { [weak self] error in
             if let error = error {
                 print("Ошибка обновления региона: \(error.localizedDescription)")
+                return
             }
+            self?.fetchData()
         }
     }
     
     func deleteRegion(id: String) {
-        db.collection("Regions").document(id).delete { error in
+        db.collection("Regions").document(id).delete { [weak self] error in
             if let error = error {
                 print("Ошибка удаления региона: \(error.localizedDescription)")
+                return
             }
+            self?.fetchData()
         }
     }
 }

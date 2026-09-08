@@ -16,23 +16,18 @@ class StaffViewModel: ObservableObject {
     @Published var staffMembers = [StaffMember]()
     @Published var isLoading = true
     private var db = Firestore.firestore()
-    private var listener: ListenerRegistration?
 
     // MARK: - Data Fetching
-    
+
     func fetchData() {
         if staffMembers.isEmpty {
             isLoading = true
         }
-        listener?.remove()
-        let staffCollection = db.collection("Staff")
-        listener = staffCollection.addSnapshotListener { querySnapshot, error in
-            if querySnapshot != nil {
-                self.isLoading = false
-            }
+        db.collection("Staff").getDocuments { [weak self] querySnapshot, error in
+            guard let self else { return }
+            self.isLoading = false
             guard let documents = querySnapshot?.documents else {
                 print("Ошибка: \(error?.localizedDescription ?? "Unknown error")")
-                self.isLoading = false
                 return
             }
             self.staffMembers = documents.compactMap { doc -> StaffMember? in
@@ -48,9 +43,6 @@ class StaffViewModel: ObservableObject {
             }
         }
     }
-    deinit {
-        listener?.remove()
-    }
     
     // MARK: - Admin Actions (Add/Update/Delete)
     
@@ -62,10 +54,12 @@ class StaffViewModel: ObservableObject {
             "photoName": photoName,
             "telegramLink": telegramLink
         ]
-        db.collection("Staff").addDocument(data: newMember) { error in
+        db.collection("Staff").addDocument(data: newMember) { [weak self] error in
             if let error = error {
                 print("Ошибка добавления: \(error.localizedDescription)")
+                return
             }
+            self?.fetchData()
         }
     }
     
@@ -77,18 +71,22 @@ class StaffViewModel: ObservableObject {
             "photoName": photoName,
             "telegramLink": telegramLink
         ]
-        db.collection("Staff").document(id).updateData(updatedData) { error in
+        db.collection("Staff").document(id).updateData(updatedData) { [weak self] error in
             if let error = error {
                 print("Ошибка обновления: \(error.localizedDescription)")
+                return
             }
+            self?.fetchData()
         }
     }
     
     func deleteMember(id: String) {
-        db.collection("Staff").document(id).delete() { error in
+        db.collection("Staff").document(id).delete() { [weak self] error in
             if let error = error {
                 print("Ошибка удаления: \(error.localizedDescription)")
+                return
             }
+            self?.fetchData()
         }
     }
 }

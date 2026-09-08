@@ -46,6 +46,9 @@ struct QuizLeaderboardView: View {
                 }
                 .scrollContentBackground(.hidden)
             }
+            .refreshable {
+                viewModel.fetchLeaderboard()
+            }
             .navigationTitle("Рейтинг участников")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

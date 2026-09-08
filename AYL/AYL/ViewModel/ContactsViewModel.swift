@@ -16,14 +16,12 @@ class ContactsViewModel: ObservableObject {
     @Published var info: ContactsInfo = .default
     @Published var isLoading = true
     private var db = Firestore.firestore()
-    private var listener: ListenerRegistration?
     
     // MARK: - Data Fetching
     
     func fetchData() {
-        listener?.remove()
-        listener = db.collection("Settings").document("contacts")
-            .addSnapshotListener { [weak self] snapshot, error in
+        db.collection("Settings").document("contacts")
+            .getDocument { [weak self] snapshot, error in
                 guard let self else { return }
                 self.isLoading = false
                 guard let data = snapshot?.data() else {
@@ -45,10 +43,6 @@ class ContactsViewModel: ObservableObject {
             }
     }
     
-    deinit {
-        listener?.remove()
-    }
-    
     // MARK: - Admin Actions
     
     func updateContacts(_ info: ContactsInfo, completion: @escaping (Bool) -> Void = { _ in }) {
@@ -62,12 +56,13 @@ class ContactsViewModel: ObservableObject {
             "directorTitle": info.directorTitle,
             "directorName": info.directorName
         ]
-        db.collection("Settings").document("contacts").setData(data, merge: true) { error in
+        db.collection("Settings").document("contacts").setData(data, merge: true) { [weak self] error in
             if let error {
                 print("Ошибка сохранения контактов: \(error.localizedDescription)")
                 completion(false)
                 return
             }
+            self?.fetchData()
             completion(true)
         }
     }

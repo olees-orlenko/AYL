@@ -25,16 +25,13 @@ class QuizViewModel: ObservableObject {
     @Published var isLoadingLeaderboard = true
     
     private var db = Firestore.firestore()
-    private var questionsListener: ListenerRegistration?
-    private var leaderboardListener: ListenerRegistration?
     
     // MARK: - Questions
     
     func fetchQuestions() {
-        questionsListener?.remove()
-        questionsListener = db.collection("QuizQuestions")
+        db.collection("QuizQuestions")
             .order(by: "createdAt")
-            .addSnapshotListener { [weak self] snapshot, error in
+            .getDocuments { [weak self] snapshot, error in
                 guard let self else { return }
                 self.isLoadingQuestions = false
                 guard let documents = snapshot?.documents else {
@@ -51,11 +48,6 @@ class QuizViewModel: ObservableObject {
             }
     }
     
-    deinit {
-        questionsListener?.remove()
-        leaderboardListener?.remove()
-    }
-    
     // MARK: - Admin(Add/Update/Delete Questions)
     
     func addQuestion(text: String, options: [String], correctIndex: Int) {
@@ -65,10 +57,12 @@ class QuizViewModel: ObservableObject {
             "correctIndex": correctIndex,
             "createdAt": FieldValue.serverTimestamp()
         ]
-        db.collection("QuizQuestions").addDocument(data: data) { error in
+        db.collection("QuizQuestions").addDocument(data: data) { [weak self] error in
             if let error {
                 print("Ошибка добавления вопроса: \(error.localizedDescription)")
+                return
             }
+            self?.fetchQuestions()
         }
     }
     
@@ -78,28 +72,31 @@ class QuizViewModel: ObservableObject {
             "options": options,
             "correctIndex": correctIndex
         ]
-        db.collection("QuizQuestions").document(id).updateData(data) { error in
+        db.collection("QuizQuestions").document(id).updateData(data) { [weak self] error in
             if let error {
                 print("Ошибка обновления вопроса: \(error.localizedDescription)")
+                return
             }
+            self?.fetchQuestions()
         }
     }
     
     func deleteQuestion(id: String) {
-        db.collection("QuizQuestions").document(id).delete { error in
+        db.collection("QuizQuestions").document(id).delete { [weak self] error in
             if let error {
                 print("Ошибка удаления вопроса: \(error.localizedDescription)")
+                return
             }
+            self?.fetchQuestions()
         }
     }
     
     // MARK: - Rating
     
     func fetchLeaderboard() {
-        leaderboardListener?.remove()
-        leaderboardListener = db.collection("PublicProfiles")
+        db.collection("PublicProfiles")
             .order(by: "quizBestScore", descending: true)
-            .addSnapshotListener { [weak self] snapshot, error in
+            .getDocuments { [weak self] snapshot, error in
                 guard let self else { return }
                 self.isLoadingLeaderboard = false
                 guard let documents = snapshot?.documents else {

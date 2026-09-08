@@ -16,7 +16,6 @@ class NewsViewModel: ObservableObject {
     @Published var news = [NewsItem]()
     @Published var isLoading = true
     private var db = Firestore.firestore()
-    private var listener: ListenerRegistration?
     
     // MARK: - Init
     
@@ -25,13 +24,13 @@ class NewsViewModel: ObservableObject {
     }
     
     // MARK: - Data Fetching
-    
+
     func fetchData() {
         isLoading = true
-        listener?.remove()
-        listener = db.collection("News")
+        db.collection("News")
             .order(by: "date", descending: true)
-            .addSnapshotListener { querySnapshot, error in
+            .getDocuments { [weak self] querySnapshot, error in
+                guard let self else { return }
                 self.isLoading = false
                 if let error = error {
                     print("Ошибка загрузки новостей: \(error.localizedDescription)")
@@ -70,10 +69,12 @@ class NewsViewModel: ObservableObject {
         if isEvent, let eventDate {
             data["eventDate"] = Timestamp(date: eventDate)
         }
-        db.collection("News").addDocument(data: data) { error in
+        db.collection("News").addDocument(data: data) { [weak self] error in
             if let error = error {
                 print("Ошибка при добавлении новости: \(error.localizedDescription)")
+                return
             }
+            self?.fetchData()
         }
     }
     
@@ -90,22 +91,22 @@ class NewsViewModel: ObservableObject {
         } else {
             data["eventDate"] = FieldValue.delete()
         }
-        db.collection("News").document(id).updateData(data) { error in
+        db.collection("News").document(id).updateData(data) { [weak self] error in
             if let error = error {
                 print("Ошибка при обновлении новости: \(error.localizedDescription)")
+                return
             }
+            self?.fetchData()
         }
     }
     
     func deleteNews(id: String) {
-        db.collection("News").document(id).delete() { error in
+        db.collection("News").document(id).delete() { [weak self] error in
             if let error = error {
                 print("Ошибка при удалении новости: \(error.localizedDescription)")
+                return
             }
+            self?.fetchData()
         }
-    }
-    
-    deinit {
-        listener?.remove()
     }
 }

@@ -43,6 +43,9 @@ struct NewsView: View {
                     .padding(.top, 20)
                     .padding(.bottom, 40)
                 }
+                .refreshable {
+                    viewModel.fetchData()
+                }
                 if viewModel.isLoading && !viewModel.news.isEmpty {
                     ProgressView()
                         .progressViewStyle(CircularProgressViewStyle())

@@ -34,6 +34,9 @@ struct ContactsView: View {
                         .padding(.bottom, 20)
                         .frame(minHeight: geometry.size.height)
                     }
+                    .refreshable {
+                        viewModel.fetchData()
+                    }
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
