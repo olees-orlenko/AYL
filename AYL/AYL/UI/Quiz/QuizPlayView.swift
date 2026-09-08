@@ -6,36 +6,42 @@
 //
 
 import SwiftUI
- 
+
 struct QuizPlayView: View {
- 
+    
     // MARK: - Properties
- 
+    
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var authManager: AuthManager
     @ObservedObject var viewModel: QuizViewModel
- 
+    
     @State private var currentIndex = 0
     @State private var selectedOption: Int? = nil
     @State private var score = 0
     @State private var isFinished = false
     @State private var isSaving = false
- 
+    
     // MARK: - Body
- 
+    
     var body: some View {
         NavigationStack {
-            VStack {
-                if viewModel.questions.isEmpty {
-                    emptyState
-                } else if isFinished {
-                    resultView
-                } else {
-                    questionView
+            ZStack {
+                Image("QuizWallpaper")
+                    .resizable()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .ignoresSafeArea()
+                VStack {
+                    if viewModel.questions.isEmpty {
+                        emptyState
+                    } else if isFinished {
+                        resultView
+                    } else {
+                        questionView
+                    }
                 }
+                .padding(.horizontal, 25)
+                .padding(.top, 20)
             }
-            .padding(.horizontal, 25)
-            .padding(.top, 20)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -44,9 +50,9 @@ struct QuizPlayView: View {
             }
         }
     }
- 
+    
     // MARK: - Subviews
- 
+    
     private var emptyState: some View {
         VStack(spacing: 12) {
             Spacer()
@@ -55,7 +61,7 @@ struct QuizPlayView: View {
             Spacer()
         }
     }
-
+    
     private var progressBar: some View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
@@ -68,12 +74,12 @@ struct QuizPlayView: View {
         }
         .frame(height: 8)
     }
- 
+    
     private var progressFraction: CGFloat {
         guard !viewModel.questions.isEmpty else { return 0 }
         return CGFloat(currentIndex) / CGFloat(viewModel.questions.count)
     }
- 
+    
     private var questionView: some View {
         let question = viewModel.questions[currentIndex]
         return VStack(alignment: .leading, spacing: 20) {
@@ -103,7 +109,7 @@ struct QuizPlayView: View {
             .disabled(selectedOption == nil)
         }
     }
-
+    
     private func optionButton(text: String, index: Int) -> some View {
         let isSelected = selectedOption == index
         return Button {
@@ -134,12 +140,12 @@ struct QuizPlayView: View {
             .shadow(color: Color.black.opacity(isSelected ? 0.08 : 0.03), radius: 6, x: 0, y: 3)
         }
     }
- 
+    
     private func optionLetter(for index: Int) -> String {
         let letters = ["А", "Б", "В", "Г", "Д", "Е"]
         return letters.indices.contains(index) ? letters[index] : "\(index + 1)"
     }
- 
+    
     private var resultView: some View {
         VStack(spacing: 20) {
             Spacer()
@@ -177,9 +183,9 @@ struct QuizPlayView: View {
             .disabled(isSaving)
         }
     }
- 
+    
     // MARK: - Private methods
- 
+    
     private func nextQuestion() {
         guard let selectedOption else { return }
         if selectedOption == viewModel.questions[currentIndex].correctIndex {
@@ -192,7 +198,7 @@ struct QuizPlayView: View {
             currentIndex += 1
         }
     }
- 
+    
     private func finish() {
         isFinished = true
         guard let uid = authManager.currentUserId else { return }

@@ -20,20 +20,31 @@ struct QuizLeaderboardView: View {
     
     var body: some View {
         NavigationStack {
-            List {
-                if viewModel.leaderboard.isEmpty && !viewModel.isLoadingLeaderboard {
-                    Text("Пока никто не проходил квиз")
-                        .foregroundColor(.secondary)
-                } else {
-                    ForEach(Array(viewModel.leaderboard.enumerated()), id: \.element.id) { index, profile in
-                        Button {
-                            selectedProfile = profile
-                        } label: {
-                            leaderboardRow(place: index + 1, profile: profile)
+            ZStack {
+                Image("QuizWallpaper")
+                    .resizable()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .ignoresSafeArea()
+                List {
+                    if viewModel.leaderboard.isEmpty && !viewModel.isLoadingLeaderboard {
+                        Text("Пока никто не проходил квиз")
+                            .foregroundColor(.secondary)
+                            .listRowBackground(Color.clear)
+                    } else {
+                        ForEach(Array(viewModel.leaderboard.enumerated()), id: \.element.id) { index, profile in
+                            Button {
+                                selectedProfile = profile
+                            } label: {
+                                leaderboardRow(place: index + 1, profile: profile)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            .listRowBackground(
+                                Color(.secondarySystemBackground).opacity(0.85)
+                            )
                         }
-                        .buttonStyle(PlainButtonStyle())
                     }
                 }
+                .scrollContentBackground(.hidden)
             }
             .navigationTitle("Рейтинг участников")
             .navigationBarTitleDisplayMode(.inline)
