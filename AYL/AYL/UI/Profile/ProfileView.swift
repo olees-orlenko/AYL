@@ -17,10 +17,15 @@ struct ProfileView: View {
     @EnvironmentObject var eventSignupManager: EventSignupManager
     @StateObject private var viewModel = ProfileViewModel()
     @StateObject private var requestsViewModel = ContactRequestsViewModel()
+    @StateObject private var certificateRequestsViewModel = CertificateRequestsViewModel()
+    @State private var certificateStatuses: [String: CertificateStatus] = [:]
+    @State private var sendingCertificateRequestFor: String? = nil
+    @State private var certificateToShow: CertificateRequest? = nil
     @State private var showingLogin = false
     @State private var showingRegister = false
     @State private var showingEdit = false
     @State private var showingAddParticipation = false
+    @State private var showingCertificateAdmin = false
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var isUploadingPhoto = false
     @AppStorage(pushEnabledDefaultsKey) private var pushEnabled = true
@@ -62,6 +67,9 @@ struct ProfileView: View {
             .sheet(isPresented: $showingAddParticipation) {
                 AddParticipationView(viewModel: viewModel)
             }
+            .sheet(isPresented: $showingCertificateAdmin) {
+                CertificateRequestsAdminView()
+            }
             .onChange(of: authManager.currentUserId) { _, _ in
                 refresh()
             }
@@ -74,8 +82,19 @@ struct ProfileView: View {
             .onChange(of: pushEnabled) { _, newValue in
                 PushNotificationManager.shared.setPushEnabled(newValue)
             }
+            .onChange(of: viewModel.participations.count) { _, _ in
+                loadCertificateStatuses()
+            }
+            .sheet(item: $certificateToShow) { request in
+                CertificateView(
+                    participantName: request.participantName,
+                    eventTitle: request.eventTitle,
+                    eventDate: request.eventDate
+                )
+            }
             .onAppear {
                 refresh()
+                loadCertificateStatuses()
             }
         }
     }
@@ -184,6 +203,7 @@ struct ProfileView: View {
             Text("Вы вошли как администратор")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
+            actionButton(title: "Запросы на сертификаты") { showingCertificateAdmin = true }
             actionButton(title: "Выйти", isDestructive: true) { authManager.signOut() }
         }
     }
@@ -491,6 +511,7 @@ struct ProfileView: View {
                 Text("\(item.formattedDate) · \(item.role.displayName)")
                     .font(.caption)
                     .foregroundColor(.secondary)
+                certificateControl(for: item)
             }
             Spacer()
             Button {
@@ -498,6 +519,88 @@ struct ProfileView: View {
             } label: {
                 Image(systemName: "xmark.circle.fill")
                     .foregroundColor(.secondary)
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private func certificateControl(for item: Participation) -> some View {
+        if let newsId = item.newsId, item.eventDate < Date() {
+            switch certificateStatuses[newsId] {
+            case .approved:
+                Button {
+                    openCertificate(for: item, newsId: newsId)
+                } label: {
+                    Text("Посмотреть сертификат")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.minty)
+                }
+                .padding(.top, 4)
+            case .pending:
+                Text("Сертификат: ожидает подтверждения")
+                    .font(.system(size: 12))
+                    .foregroundColor(.secondary)
+                    .padding(.top, 4)
+            case .declined:
+                Button {
+                    requestCertificate(for: item, newsId: newsId)
+                } label: {
+                    Text(sendingCertificateRequestFor == newsId ? "Отправляем…" : "Запрос отклонён — отправить снова")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.violet)
+                }
+                .disabled(sendingCertificateRequestFor == newsId)
+                .padding(.top, 4)
+            case .none:
+                Button {
+                    requestCertificate(for: item, newsId: newsId)
+                } label: {
+                    Text(sendingCertificateRequestFor == newsId ? "Отправляем…" : "Запросить сертификат")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.violet)
+                }
+                .disabled(sendingCertificateRequestFor == newsId)
+                .padding(.top, 4)
+            }
+        }
+    }
+    
+    private func openCertificate(for item: Participation, newsId: String) {
+        guard let uid = authManager.currentUserId, let participant = viewModel.participant else { return }
+        certificateToShow = CertificateRequest(
+            id: "\(uid)_\(newsId)",
+            participantUid: uid,
+            participantName: participant.name,
+            newsId: newsId,
+            eventTitle: item.eventTitle,
+            eventDate: item.eventDate,
+            status: .approved
+        )
+    }
+    
+    private func requestCertificate(for item: Participation, newsId: String) {
+        guard let uid = authManager.currentUserId, let participant = viewModel.participant else { return }
+        sendingCertificateRequestFor = newsId
+        certificateRequestsViewModel.sendRequest(
+            uid: uid, name: participant.name, newsId: newsId,
+            eventTitle: item.eventTitle, eventDate: item.eventDate
+        ) { success in
+            sendingCertificateRequestFor = nil
+            if success {
+                certificateStatuses[newsId] = .pending
+            }
+        }
+    }
+    
+    private func loadCertificateStatuses() {
+        guard let uid = authManager.currentUserId else {
+            certificateStatuses = [:]
+            return
+        }
+        for item in viewModel.participations {
+            guard let newsId = item.newsId, item.eventDate < Date() else { continue }
+            certificateRequestsViewModel.fetchMyRequest(uid: uid, newsId: newsId) { request in
+                certificateStatuses[newsId] = request?.status
             }
         }
     }

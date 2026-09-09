@@ -57,12 +57,12 @@ enum CertificateGenerator {
 
         var currentSize = fontSize
         var attributed = NSAttributedString(string: text, attributes: [.font: font(for: currentSize), .foregroundColor: color, .paragraphStyle: paragraph])
-        var singleLineWidth = attributed.boundingRect(with: CGSize(width: .greatestFiniteMagnitude, height: .greatestFiniteMagnitude), options: [.usesLineFragmentOrigin], context: nil).width
+        var singleLineWidth = attributed.boundingRect(with: CGSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude), options: [.usesLineFragmentOrigin], context: nil).width
 
         while singleLineWidth > maxWidth && currentSize > fontSize * 0.55 {
             currentSize -= 2
             attributed = NSAttributedString(string: text, attributes: [.font: font(for: currentSize), .foregroundColor: color, .paragraphStyle: paragraph])
-            singleLineWidth = attributed.boundingRect(with: CGSize(width: .greatestFiniteMagnitude, height: .greatestFiniteMagnitude), options: [.usesLineFragmentOrigin], context: nil).width
+            singleLineWidth = attributed.boundingRect(with: CGSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude), options: [.usesLineFragmentOrigin], context: nil).width
         }
 
         let wrappedSize = attributed.boundingRect(with: CGSize(width: maxWidth, height: .greatestFiniteMagnitude), options: [.usesLineFragmentOrigin], context: nil).size
