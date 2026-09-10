@@ -26,6 +26,7 @@ struct ProfileView: View {
     @State private var showingEdit = false
     @State private var showingAddParticipation = false
     @State private var showingCertificateAdmin = false
+    @State private var showingDeleteAccount = false
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var isUploadingPhoto = false
     @AppStorage(pushEnabledDefaultsKey) private var pushEnabled = true
@@ -63,6 +64,9 @@ struct ProfileView: View {
                 if let participant = viewModel.participant {
                     EditProfileView(viewModel: viewModel, participant: participant)
                 }
+            }
+            .sheet(isPresented: $showingDeleteAccount) {
+                DeleteAccountView(viewModel: viewModel)
             }
             .sheet(isPresented: $showingAddParticipation) {
                 AddParticipationView(viewModel: viewModel)
@@ -230,6 +234,11 @@ struct ProfileView: View {
                 participationsSection
                 actionButton(title: "Редактировать профиль") { showingEdit = true }
                 actionButton(title: "Выйти", isDestructive: true) { authManager.signOut() }
+                Button("Удалить аккаунт") { showingDeleteAccount = true }
+                    .font(.system(size: 13))
+                    .foregroundColor(.secondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 4)
             }
         } else {
             VStack(spacing: 12) {

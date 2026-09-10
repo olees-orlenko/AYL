@@ -9,6 +9,7 @@
 import Foundation
 import FirebaseAuth
 import FirebaseFirestore
+import FirebaseFunctions
 import FirebaseStorage
 internal import Combine
 
@@ -135,6 +136,39 @@ final class ProfileViewModel: ObservableObject {
                 photoUrl: participant.photoUrl
             )
             completion(true)
+        }
+    }
+    
+    func deleteAccount(password: String, completion: @escaping (Bool) -> Void) {
+        guard let user = Auth.auth().currentUser, let email = user.email else {
+            errorMessage = "Не удалось определить текущего пользователя"
+            completion(false)
+            return
+        }
+        isSaving = true
+        errorMessage = ""
+        let credential = EmailAuthProvider.credential(withEmail: email, password: password)
+        user.reauthenticate(with: credential) { [weak self] _, error in
+            guard let self else { return }
+            if error != nil {
+                self.isSaving = false
+                self.errorMessage = "Неверный пароль"
+                completion(false)
+                return
+            }
+            Functions.functions().httpsCallable("deleteMyAccountData").call { [weak self] _, error in
+                guard let self else { return }
+                self.isSaving = false
+                if let error {
+                    self.errorMessage = error.localizedDescription
+                    completion(false)
+                    return
+                }
+                try? Auth.auth().signOut()
+                self.participant = nil
+                self.participations = []
+                completion(true)
+            }
         }
     }
     

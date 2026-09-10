@@ -19,6 +19,9 @@ import { getMessaging } from "firebase-admin/messaging";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { logger } from "firebase-functions";
+import { getStorage } from "firebase-admin/storage";
+import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { getAuth } from "firebase-admin/auth";
 
 initializeApp();
 const db = getFirestore();
@@ -179,3 +182,46 @@ export const convertPastEventSignups = onSchedule(
     }
   }
 );
+// ──────────────────────────────────────────────────────────────────────────
+// 4. ИЗМЕНЕНО: удаление аккаунта — вызывается из приложения (не триггер), чтобы
+//    не зависеть от Gen1 и не упереться в потолок поддерживаемых версий Node.
+//    Проверяем, что вызывающий аутентифицирован, и удаляем ТОЛЬКО его же данные —
+//    request.auth.uid берётся из проверенного токена, а не от клиента, так что
+//    подделать чужой uid нельзя.
+// ──────────────────────────────────────────────────────────────────────────
+
+export const deleteMyAccountData = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Нужно быть авторизованным");
+  }
+  const uid = request.auth.uid;
+
+  await db.recursiveDelete(db.collection("participants").doc(uid));
+  await db.collection("PublicProfiles").doc(uid).delete().catch(() => undefined);
+
+  const contactSnapshots = await Promise.all([
+    db.collection("ContactRequests").where("fromUid", "==", uid).get(),
+    db.collection("ContactRequests").where("toUid", "==", uid).get(),
+  ]);
+  const contactBatch = db.batch();
+  for (const snapshot of contactSnapshots) {
+    snapshot.docs.forEach((doc) => contactBatch.delete(doc.ref));
+  }
+  await contactBatch.commit();
+
+  const certificateSnapshot = await db
+    .collection("CertificateRequests")
+    .where("participantUid", "==", uid)
+    .get();
+  const certificateBatch = db.batch();
+  certificateSnapshot.docs.forEach((doc) => certificateBatch.delete(doc.ref));
+  await certificateBatch.commit();
+
+  await getStorage().bucket().file(`participant_photos/${uid}.jpg`).delete().catch(() => undefined);
+
+  // Сам Auth-аккаунт удаляем тоже здесь, на сервере — атомарно с чисткой данных.
+  await getAuth().deleteUser(uid);
+
+  logger.info(`deleteMyAccountData: аккаунт и данные участника ${uid} удалены`);
+  return { success: true };
+});
