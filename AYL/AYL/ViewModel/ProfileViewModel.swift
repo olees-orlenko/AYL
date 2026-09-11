@@ -81,6 +81,21 @@ final class ProfileViewModel: ObservableObject {
         }
     }
     
+    func resetPassword(email: String, completion: @escaping (Bool) -> Void) {
+        errorMessage = ""
+        isSaving = true
+        Auth.auth().sendPasswordReset(withEmail: email) { [weak self] error in
+            guard let self else { return }
+            self.isSaving = false
+            if let error {
+                self.errorMessage = error.localizedDescription
+                completion(false)
+                return
+            }
+            completion(true)
+        }
+    }
+    
     // MARK: - Profile
     
     func fetchProfile(uid: String?) {
