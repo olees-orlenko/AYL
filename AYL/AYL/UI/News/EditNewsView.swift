@@ -199,7 +199,6 @@ struct EditNewsView: View {
         }
         .onAppear {
             validateForm()
-            print("DEBUG newsItem.id =", newsItem.id, "isEvent =", newsItem.isEvent)
         }
     }
 }

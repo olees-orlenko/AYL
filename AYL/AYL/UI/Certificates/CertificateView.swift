@@ -15,6 +15,7 @@ struct CertificateView: View {
     
     @Environment(\.dismiss) var dismiss
     @State private var image: UIImage?
+    @State private var didFail = false
     
     var body: some View {
         NavigationStack {
@@ -24,6 +25,22 @@ struct CertificateView: View {
                         .resizable()
                         .scaledToFit()
                         .padding()
+                } else if didFail {
+                    VStack(spacing: 12) {
+                        Image(systemName: "exclamationmark.triangle")
+                            .font(.system(size: 40))
+                            .foregroundColor(.orange)
+                        Text("Не удалось создать сертификат")
+                            .font(.headline)
+                        Text("Попробуйте ещё раз или обратитесь в поддержку.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                        Button("Повторить") { generate() }
+                            .buttonStyle(.borderedProminent)
+                    }
+                    .padding()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     ProgressView()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -47,6 +64,7 @@ struct CertificateView: View {
     }
     
     private func generate() {
+        didFail = false
         let formatter = DateFormatter()
         formatter.dateFormat = "d MMMM yyyy"
         formatter.locale = Locale(identifier: "ru_RU")
@@ -55,5 +73,8 @@ struct CertificateView: View {
             eventTitle: eventTitle,
             eventDateText: formatter.string(from: eventDate)
         )
+        if image == nil {
+            didFail = true
+        }
     }
 }
