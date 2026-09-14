@@ -56,6 +56,7 @@ struct ParticipantLoginView: View {
                     }
                 }
                 .disabled(!isFormValid || viewModel.isSaving)
+                .listRowSeparator(.hidden)
                 Button("Забыли пароль?") {
                     resetPassword()
                 }

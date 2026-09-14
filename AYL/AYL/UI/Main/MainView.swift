@@ -15,8 +15,6 @@ struct MainView: View {
     
     private let documentsUrlString = "https://ayl.ru/dokumenty"
     @AppStorage("isDarkMode") private var isDarkMode = false
-    @State private var tapCount = 0
-    @State private var showingLogin = false
     @State private var showingProfile = false
     @EnvironmentObject var authManager: AuthManager
     @State private var showingQuiz = false
@@ -60,9 +58,6 @@ struct MainView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showingLogin) {
-                LoginView()
-            }
             .sheet(isPresented: $showingProfile) {
                 ProfileView()
             }
@@ -96,14 +91,6 @@ struct MainView: View {
                 .frame(width: 120, height: 120)
             Spacer()
         }
-        .onTapGesture {
-            tapCount += 1
-            if tapCount == 5 {
-                showingLogin = true
-                tapCount = 0
-            }
-        }
-        
         .padding(.top, 10)
     }
     
