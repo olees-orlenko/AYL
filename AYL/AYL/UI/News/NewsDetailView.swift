@@ -59,7 +59,7 @@ struct NewsDetailView: View {
             .fade(duration: 0.3)
             .resizable()
             .aspectRatio(contentMode: .fill)
-            .frame(maxWidth: UIScreen.main.bounds.width)
+            .frame(maxWidth: .infinity)
             .clipped()
     }
     
