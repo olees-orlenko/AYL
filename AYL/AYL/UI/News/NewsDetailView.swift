@@ -17,6 +17,7 @@ struct NewsDetailView: View {
     @EnvironmentObject var authManager: AuthManager
     @EnvironmentObject var eventSignupManager: EventSignupManager
     @State private var isTogglingSignup = false
+    @State private var showingSignupError = false
     
     // MARK: - Body
     
@@ -41,6 +42,11 @@ struct NewsDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
         .toolbar { toolbarContent }
+        .alert("Не получилось", isPresented: $showingSignupError) {
+            Button("Ок", role: .cancel) {}
+        } message: {
+            Text(eventSignupManager.errorMessage.isEmpty ? "Попробуйте ещё раз." : eventSignupManager.errorMessage)
+        }
     }
     
     // MARK: - Subviews
@@ -142,8 +148,11 @@ struct NewsDetailView: View {
     
     private func toggleSignup(eventDate: Date) {
         isTogglingSignup = true
-        eventSignupManager.toggleSignup(newsId: news.id, eventTitle: news.title, eventDate: eventDate) { _ in
+        eventSignupManager.toggleSignup(newsId: news.id, eventTitle: news.title, eventDate: eventDate) { success in
             isTogglingSignup = false
+            if !success {
+                showingSignupError = true
+            }
         }
     }
     

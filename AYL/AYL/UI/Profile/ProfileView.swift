@@ -29,6 +29,7 @@ struct ProfileView: View {
     @State private var showingDeleteAccount = false
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var isUploadingPhoto = false
+    @State private var showingSignupError = false
     @AppStorage(pushEnabledDefaultsKey) private var pushEnabled = true
     
     // MARK: - Body
@@ -53,6 +54,11 @@ struct ProfileView: View {
                 ToolbarItem(placement: .principal) {
                     Color.clear.frame(height: 0)
                 }
+            }
+            .alert("Не получилось", isPresented: $showingSignupError) {
+                Button("Ок", role: .cancel) {}
+            } message: {
+                Text(eventSignupManager.errorMessage.isEmpty ? "Попробуйте ещё раз." : eventSignupManager.errorMessage)
             }
             .sheet(isPresented: $showingLogin) {
                 ParticipantLoginView(viewModel: viewModel)
@@ -336,7 +342,11 @@ struct ProfileView: View {
             }
             Spacer()
             Button {
-                eventSignupManager.cancelSignup(newsId: signup.newsId)
+                eventSignupManager.cancelSignup(newsId: signup.newsId) { success in
+                    if !success {
+                        showingSignupError = true
+                    }
+                }
             } label: {
                 Image(systemName: "xmark.circle.fill")
                     .foregroundColor(.secondary)
