@@ -18,6 +18,7 @@ struct NewsDetailView: View {
     @EnvironmentObject var eventSignupManager: EventSignupManager
     @State private var isTogglingSignup = false
     @State private var showingSignupError = false
+    @State private var showingComments = false
     
     // MARK: - Body
     
@@ -30,6 +31,7 @@ struct NewsDetailView: View {
                     dateSection
                     signupSection
                     contentSection
+                    commentsButton
                     if !news.linkUrl.isEmpty {
                         footerSection
                     }
@@ -42,6 +44,9 @@ struct NewsDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
         .toolbar { toolbarContent }
+        .sheet(isPresented: $showingComments) {
+            NewsCommentsView(newsId: news.id)
+        }
         .alert("Не получилось", isPresented: $showingSignupError) {
             Button("Ок", role: .cancel) {}
         } message: {
@@ -115,6 +120,19 @@ struct NewsDetailView: View {
             .font(.body)
             .lineSpacing(4)
             .foregroundColor(.primary)
+    }
+    
+    private var commentsButton: some View {
+        Button {
+            showingComments = true
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "bubble.left.and.bubble.right")
+                Text("Комментарии")
+            }
+            .font(.system(size: 15, weight: .semibold))
+            .foregroundColor(.violet)
+        }
     }
     
     @ViewBuilder

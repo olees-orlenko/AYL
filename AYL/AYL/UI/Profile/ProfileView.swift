@@ -30,6 +30,7 @@ struct ProfileView: View {
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var isUploadingPhoto = false
     @State private var showingSignupError = false
+    @State private var showingCommentReportsAdmin = false
     @AppStorage(pushEnabledDefaultsKey) private var pushEnabled = true
     
     // MARK: - Body
@@ -79,6 +80,9 @@ struct ProfileView: View {
             }
             .sheet(isPresented: $showingCertificateAdmin) {
                 CertificateRequestsAdminView()
+            }
+            .sheet(isPresented: $showingCommentReportsAdmin) {
+                CommentReportsAdminView()
             }
             .onChange(of: authManager.currentUserId) { _, _ in
                 refresh()
@@ -214,6 +218,7 @@ struct ProfileView: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
             actionButton(title: "Запросы на сертификаты") { showingCertificateAdmin = true }
+            actionButton(title: "Жалобы на комментарии") { showingCommentReportsAdmin = true }
             actionButton(title: "Выйти", isDestructive: true) { authManager.signOut() }
         }
     }
