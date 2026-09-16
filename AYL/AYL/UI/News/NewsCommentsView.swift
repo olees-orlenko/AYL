@@ -17,32 +17,44 @@ struct NewsCommentsView: View {
     @Environment(\.dismiss) var dismiss
     @State private var newCommentText = ""
     @State private var showingReportConfirmation = false
+    @FocusState private var isInputFocused: Bool
     
     // MARK: - Body
     
     var body: some View {
         NavigationStack {
-            List {
-                ForEach(viewModel.comments) { comment in
-                    commentRow(comment)
-                        .onAppear {
-                            viewModel.loadNextPageIfNeeded(currentComment: comment, newsId: newsId)
+            ZStack {
+                Image("QuizWallpaper")
+                    .resizable()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .ignoresSafeArea()
+                VStack(spacing: 0) {
+                    List {
+                        ForEach(viewModel.comments) { comment in
+                            commentRow(comment)
+                                .listRowSeparator(.hidden)
+                                .listRowBackground(Color.clear)
+                                .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                                .onAppear {
+                                    viewModel.loadNextPageIfNeeded(currentComment: comment, newsId: newsId)
+                                }
                         }
-                }
-                if viewModel.isLoadingMore {
-                    ProgressView()
-                        .frame(maxWidth: .infinity)
-                }
-                if viewModel.comments.isEmpty && !viewModel.isLoading {
-                    Text("Комментариев пока нет — будьте первым!")
-                        .font(.footnote)
-                        .foregroundColor(.secondary)
-                }
-            }
-            .listStyle(.plain)
-            .overlay {
-                if viewModel.isLoading && viewModel.comments.isEmpty {
-                    ProgressView()
+                        if viewModel.isLoadingMore {
+                            ProgressView()
+                                .frame(maxWidth: .infinity)
+                                .listRowBackground(Color.clear)
+                        }
+                    }
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
+                    .overlay {
+                        if viewModel.isLoading && viewModel.comments.isEmpty {
+                            ProgressView()
+                        } else if viewModel.comments.isEmpty && !viewModel.isLoading {
+                            emptyState
+                        }
+                    }
+                    inputBar
                 }
             }
             .navigationTitle("Комментарии")
@@ -51,9 +63,6 @@ struct NewsCommentsView: View {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Закрыть") { dismiss() }
                 }
-            }
-            .safeAreaInset(edge: .bottom) {
-                inputBar
             }
             .onAppear {
                 viewModel.loadFirstPage(newsId: newsId)
@@ -66,6 +75,21 @@ struct NewsCommentsView: View {
         }
     }
     
+    // MARK: - EmptyState
+    
+    private var emptyState: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "bubble.left.and.bubble.right")
+                .font(.system(size: 36))
+                .foregroundColor(.secondary)
+            Text("Комментариев пока нет — будьте первым!")
+                .font(.footnote)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .padding(.horizontal, 40)
+    }
+    
     // MARK: - Row
     
     private func commentRow(_ comment: NewsComment) -> some View {
@@ -73,6 +97,7 @@ struct NewsCommentsView: View {
             HStack {
                 Text(comment.authorName)
                     .font(.subheadline.bold())
+                    .foregroundColor(.minty)
                 Spacer()
                 Text(comment.createdAt.formatted(date: .abbreviated, time: .shortened))
                     .font(.caption2)
@@ -80,8 +105,13 @@ struct NewsCommentsView: View {
             }
             Text(comment.text)
                 .font(.body)
+                .foregroundColor(.primary)
         }
-        .padding(.vertical, 4)
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(14)
+        .shadow(color: Color.black.opacity(0.03), radius: 6, x: 0, y: 3)
         .swipeActions(edge: .trailing) {
             if authManager.isAdminLoggedIn || comment.authorUid == authManager.currentUserId {
                 Button(role: .destructive) {
@@ -115,32 +145,46 @@ struct NewsCommentsView: View {
     @ViewBuilder
     private var inputBar: some View {
         if authManager.isParticipantLoggedIn || authManager.isAdminLoggedIn {
-            HStack(alignment: .bottom, spacing: 8) {
+            HStack(spacing: 8) {
                 TextField("Ваш комментарий...", text: $newCommentText, axis: .vertical)
                     .lineLimit(1...4)
-                    .textFieldStyle(.roundedBorder)
+                    .focused($isInputFocused)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .background(Color(.tertiarySystemBackground))
+                    .cornerRadius(14)
                 Button {
                     send()
                 } label: {
-                    Image(systemName: "arrow.up.circle.fill")
-                        .font(.system(size: 28))
+                    Image(systemName: "arrow.up")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.white)
+                        .frame(width: 44, height: 44)
+                        .background(isCommentValid ? Color.minty : Color.gray.opacity(0.3))
+                        .cornerRadius(14)
                 }
-                .disabled(newCommentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || viewModel.isSending)
+                .disabled(!isCommentValid || viewModel.isSending)
             }
-            .padding()
-            .background(.bar)
+            .padding(.horizontal)
+            .padding(.vertical, 10)
+            .background(.ultraThinMaterial)
         } else {
             Text("Войдите в личный кабинет, чтобы оставить комментарий")
                 .font(.caption)
                 .foregroundColor(.secondary)
                 .padding()
                 .frame(maxWidth: .infinity)
-                .background(.bar)
+                .background(.ultraThinMaterial)
         }
+    }
+    
+    private var isCommentValid: Bool {
+        !newCommentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
     
     private func send() {
         guard let uid = authManager.currentUserId else { return }
+        isInputFocused = false
         viewModel.addComment(newsId: newsId, authorUid: uid, text: newCommentText) { success in
             if success {
                 newCommentText = ""
