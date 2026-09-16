@@ -25,12 +25,10 @@ struct QuizLeaderboardView: View {
                     .resizable()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .ignoresSafeArea()
-                List {
-                    if viewModel.leaderboard.isEmpty && !viewModel.isLoadingLeaderboard {
-                        Text("Пока никто не проходил квиз")
-                            .foregroundColor(.secondary)
-                            .listRowBackground(Color.clear)
-                    } else {
+                if viewModel.leaderboard.isEmpty && !viewModel.isLoadingLeaderboard {
+                    emptyState
+                } else {
+                    List {
                         ForEach(Array(viewModel.leaderboard.enumerated()), id: \.element.id) { index, profile in
                             Button {
                                 selectedProfile = profile
@@ -43,8 +41,8 @@ struct QuizLeaderboardView: View {
                             )
                         }
                     }
+                    .scrollContentBackground(.hidden)
                 }
-                .scrollContentBackground(.hidden)
             }
             .refreshable {
                 viewModel.fetchLeaderboard()
@@ -85,6 +83,18 @@ struct QuizLeaderboardView: View {
                 .foregroundColor(.minty)
         }
         .padding(.vertical, place <= 3 ? 6 : 4)
+    }
+    
+    private var emptyState: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "trophy")
+                .font(.system(size: 36))
+                .foregroundColor(.secondary)
+            Text("Пока никто не проходил квиз")
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .padding(.horizontal, 40)
     }
     
     @ViewBuilder
