@@ -7,8 +7,6 @@
 
 import SwiftUI
 
-import SwiftUI
-
 // MARK: - WhyChooseUsView
 
 struct WhyChooseUsView: View {
