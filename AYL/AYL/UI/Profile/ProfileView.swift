@@ -31,6 +31,7 @@ struct ProfileView: View {
     @State private var isUploadingPhoto = false
     @State private var showingSignupError = false
     @State private var showingCommentReportsAdmin = false
+    @State private var showingBlockedUsers = false
     @AppStorage(pushEnabledDefaultsKey) private var pushEnabled = true
     
     // MARK: - Body
@@ -74,6 +75,11 @@ struct ProfileView: View {
             }
             .sheet(isPresented: $showingDeleteAccount) {
                 DeleteAccountView(viewModel: viewModel)
+            }
+            .sheet(isPresented: $showingBlockedUsers) {
+                if let uid = authManager.currentUserId {
+                    BlockedUsersView(currentUid: uid)
+                }
             }
             .sheet(isPresented: $showingAddParticipation) {
                 AddParticipationView(viewModel: viewModel)
@@ -244,6 +250,7 @@ struct ProfileView: View {
                 upcomingSignupsSection
                 participationsSection
                 actionButton(title: "Редактировать профиль") { showingEdit = true }
+                actionButton(title: "Заблокированные пользователи") { showingBlockedUsers = true }
                 actionButton(title: "Выйти", isDestructive: true) { authManager.signOut() }
                 Button("Удалить аккаунт") { showingDeleteAccount = true }
                     .font(.system(size: 13))

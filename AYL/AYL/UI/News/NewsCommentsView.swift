@@ -19,6 +19,10 @@ struct NewsCommentsView: View {
     @State private var showingReportConfirmation = false
     @FocusState private var isInputFocused: Bool
     
+    private var visibleComments: [NewsComment] {
+        viewModel.comments.filter { !viewModel.blockedUserIds.contains($0.authorUid) }
+    }
+    
     // MARK: - Body
     
     var body: some View {
@@ -30,7 +34,7 @@ struct NewsCommentsView: View {
                     .ignoresSafeArea()
                 VStack(spacing: 0) {
                     List {
-                        ForEach(viewModel.comments) { comment in
+                        ForEach(visibleComments) { comment in
                             commentRow(comment)
                                 .listRowSeparator(.hidden)
                                 .listRowBackground(Color.clear)
@@ -127,6 +131,12 @@ struct NewsCommentsView: View {
                     Label("Пожаловаться", systemImage: "flag")
                 }
                 .tint(.orange)
+                Button {
+                    viewModel.blockUser(uid: comment.authorUid, name: comment.authorName, currentUid: authManager.currentUserId)
+                } label: {
+                    Label("Заблокировать", systemImage: "person.fill.xmark")
+                }
+                .tint(.red)
             }
         }
     }
