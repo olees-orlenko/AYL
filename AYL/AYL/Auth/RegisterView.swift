@@ -19,11 +19,14 @@ struct RegisterView: View {
     @State private var role: ParticipantRole = .alpha
     @State private var email = ""
     @State private var password = ""
+    @State private var acceptedTerms = false
+    @State private var showingTerms = false
 
     private var isFormValid: Bool {
         !name.trimmingCharacters(in: .whitespaces).isEmpty &&
         !email.trimmingCharacters(in: .whitespaces).isEmpty &&
-        password.count >= 6
+        password.count >= 6 &&
+        acceptedTerms
     }
 
     // MARK: - Body
@@ -52,6 +55,21 @@ struct RegisterView: View {
                             .font(.caption)
                     }
                 }
+                Section {
+                    HStack {
+                        Toggle("", isOn: $acceptedTerms)
+                            .labelsHidden()
+                        Button {
+                            showingTerms = true
+                        } label: {
+                            Text("Я принимаю условия использования")
+                                .font(.subheadline)
+                                .foregroundColor(.primary)
+                                .underline()
+                        }
+                        Spacer()
+                    }
+                }
                 Button {
                     register()
                 } label: {
@@ -72,6 +90,9 @@ struct RegisterView: View {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Отмена") { dismiss() }
                 }
+            }
+            .sheet(isPresented: $showingTerms) {
+                TermsOfServiceView()
             }
         }
     }
