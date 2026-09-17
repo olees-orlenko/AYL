@@ -132,7 +132,8 @@ struct QuizPlayView: View {
                 }
                 Text(text)
                     .foregroundColor(isSelected ? .minty : .primary)
-                Spacer()
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding()
             .background(isSelected ? Color.minty.opacity(0.12) : Color(.secondarySystemBackground))
