@@ -19,6 +19,7 @@ final class NewsCommentsViewModel: ObservableObject {
     @Published var hasMore = true
     @Published var isSending = false
     @Published var errorMessage = ""
+    @Published var blockedUserIds: Set<String> = []
     
     private let db = Firestore.firestore()
     private var lastDocument: DocumentSnapshot?
@@ -159,5 +160,36 @@ final class NewsCommentsViewModel: ObservableObject {
             }
             completion(true)
         }
+    }
+    
+    // MARK: - Blocking
+    
+    func loadBlockedUsers(currentUid: String?) {
+        guard let currentUid else {
+            blockedUserIds = []
+            return
+        }
+        db.collection("participants").document(currentUid).getDocument { [weak self] snapshot, _ in
+            guard let self else { return }
+            let map = snapshot?.data()?["blockedUsers"] as? [String: String] ?? [:]
+            self.blockedUserIds = Set(map.keys)
+        }
+    }
+    
+    func blockUser(uid: String, name: String, currentUid: String?, completion: @escaping (Bool) -> Void = { _ in }) {
+        guard let currentUid else {
+            completion(false)
+            return
+        }
+        blockedUserIds.insert(uid)
+        db.collection("participants").document(currentUid)
+            .updateData(["blockedUsers.\(uid)": name]) { error in
+                if let error {
+                    print("Comments: не удалось заблокировать пользователя — \(error.localizedDescription)")
+                    completion(false)
+                    return
+                }
+                completion(true)
+            }
     }
 }

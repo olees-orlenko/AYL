@@ -41,8 +41,9 @@ struct Participant: Identifiable {
     let email: String
     let createdAt: Date
     let photoUrl: String?
+    let blockedUsers: [String: String]
     
-    init(id: String, name: String, phone: String, role: ParticipantRole, email: String, createdAt: Date, photoUrl: String? = nil) {
+    init(id: String, name: String, phone: String, role: ParticipantRole, email: String, createdAt: Date, photoUrl: String? = nil, blockedUsers: [String: String] = [:]) {
         self.id = id
         self.name = name
         self.phone = phone
@@ -50,5 +51,6 @@ struct Participant: Identifiable {
         self.email = email
         self.createdAt = createdAt
         self.photoUrl = photoUrl
+        self.blockedUsers = blockedUsers
     }
 }

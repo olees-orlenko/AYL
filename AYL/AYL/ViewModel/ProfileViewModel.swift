@@ -116,7 +116,8 @@ final class ProfileViewModel: ObservableObject {
                 role: ParticipantRole(rawValue: data["role"] as? String ?? "") ?? .alpha,
                 email: data["email"] as? String ?? "",
                 createdAt: timestamp.dateValue(),
-                photoUrl: data["photoUrl"] as? String
+                photoUrl: data["photoUrl"] as? String,
+                blockedUsers: data["blockedUsers"] as? [String: String] ?? [:]
             )
         }
     }
@@ -148,7 +149,8 @@ final class ProfileViewModel: ObservableObject {
                 role: role,
                 email: participant.email,
                 createdAt: participant.createdAt,
-                photoUrl: participant.photoUrl
+                photoUrl: participant.photoUrl,
+                blockedUsers: participant.blockedUsers
             )
             completion(true)
         }
@@ -235,7 +237,8 @@ final class ProfileViewModel: ObservableObject {
                             role: participant.role,
                             email: participant.email,
                             createdAt: participant.createdAt,
-                            photoUrl: url.absoluteString
+                            photoUrl: url.absoluteString,
+                            blockedUsers: participant.blockedUsers
                         )
                         completion(true)
                     }
