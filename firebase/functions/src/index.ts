@@ -225,3 +225,29 @@ export const deleteMyAccountData = onCall(async (request) => {
   logger.info(`deleteMyAccountData: аккаунт и данные участника ${uid} удалены`);
   return { success: true };
 });
+// ──────────────────────────────────────────────────────────────────────────
+// 5. ДОБАВЛЕНО: блокировка нарушителя администратором — Apple Guideline 1.2
+//    требует не только удалить нарушающий контент, но и "eject" (заблокировать)
+//    его автора. Проверяем, что вызывающий — админ, и отключаем Auth-аккаунт
+//    нарушителя, чтобы он больше не мог войти и писать новые комментарии.
+// ──────────────────────────────────────────────────────────────────────────
+
+export const banParticipant = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Нужно быть авторизованным");
+  }
+  const adminDoc = await db.collection("admins").doc(request.auth.uid).get();
+  if (!adminDoc.exists) {
+    throw new HttpsError("permission-denied", "Только администратор может блокировать пользователей");
+  }
+  const targetUid = request.data?.uid;
+  if (!targetUid || typeof targetUid !== "string") {
+    throw new HttpsError("invalid-argument", "Не передан uid пользователя");
+  }
+
+  await getAuth().updateUser(targetUid, { disabled: true });
+  await db.collection("participants").doc(targetUid).set({ isBanned: true }, { merge: true });
+
+  logger.info(`banParticipant: пользователь ${targetUid} заблокирован администратором ${request.auth.uid}`);
+  return { success: true };
+});
