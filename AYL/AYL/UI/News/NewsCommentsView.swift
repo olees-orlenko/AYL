@@ -70,6 +70,7 @@ struct NewsCommentsView: View {
             }
             .onAppear {
                 viewModel.loadFirstPage(newsId: newsId)
+                viewModel.loadBlockedUsers(currentUid: authManager.currentUserId)
             }
             .alert("Жалоба отправлена", isPresented: $showingReportConfirmation) {
                 Button("Ок", role: .cancel) {}
