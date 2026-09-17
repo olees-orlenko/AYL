@@ -32,6 +32,7 @@ struct ProfileView: View {
     @State private var showingSignupError = false
     @State private var showingCommentReportsAdmin = false
     @State private var showingBlockedUsers = false
+    @State private var showingBannedUsersAdmin = false
     @AppStorage(pushEnabledDefaultsKey) private var pushEnabled = true
     
     // MARK: - Body
@@ -89,6 +90,9 @@ struct ProfileView: View {
             }
             .sheet(isPresented: $showingCommentReportsAdmin) {
                 CommentReportsAdminView()
+            }
+            .sheet(isPresented: $showingBannedUsersAdmin) {
+                BannedUsersAdminView()
             }
             .onChange(of: authManager.currentUserId) { _, _ in
                 refresh()
@@ -225,6 +229,7 @@ struct ProfileView: View {
                 .foregroundColor(.secondary)
             actionButton(title: "Запросы на сертификаты") { showingCertificateAdmin = true }
             actionButton(title: "Жалобы на комментарии") { showingCommentReportsAdmin = true }
+            actionButton(title: "Заблокированные вами") { showingBannedUsersAdmin = true }
             actionButton(title: "Выйти", isDestructive: true) { authManager.signOut() }
         }
     }

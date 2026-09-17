@@ -14,7 +14,7 @@
  */
 
 import { initializeApp } from "firebase-admin/app";
-import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { onSchedule } from "firebase-functions/v2/scheduler";
@@ -246,8 +246,33 @@ export const banParticipant = onCall(async (request) => {
   }
 
   await getAuth().updateUser(targetUid, { disabled: true });
-  await db.collection("participants").doc(targetUid).set({ isBanned: true }, { merge: true });
+  await db.collection("participants").doc(targetUid).set(
+    { isBanned: true, bannedBy: request.auth.uid }, // ИЗМЕНЕНО: добавлено bannedBy — кто именно из админов забанил
+    { merge: true }
+  );
 
   logger.info(`banParticipant: пользователь ${targetUid} заблокирован администратором ${request.auth.uid}`);
+  return { success: true };
+});
+export const unbanParticipant = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Нужно быть авторизованным");
+  }
+  const adminDoc = await db.collection("admins").doc(request.auth.uid).get();
+  if (!adminDoc.exists) {
+    throw new HttpsError("permission-denied", "Только администратор может разблокировать пользователей");
+  }
+  const targetUid = request.data?.uid;
+  if (!targetUid || typeof targetUid !== "string") {
+    throw new HttpsError("invalid-argument", "Не передан uid пользователя");
+  }
+
+  await getAuth().updateUser(targetUid, { disabled: false });
+  await db.collection("participants").doc(targetUid).set(
+    { isBanned: false, bannedBy: FieldValue.delete() }, // ИЗМЕНЕНО: убираем bannedBy при разбане
+    { merge: true }
+  );
+
+  logger.info(`unbanParticipant: пользователь ${targetUid} разблокирован администратором ${request.auth.uid}`);
   return { success: true };
 });
