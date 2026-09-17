@@ -6,6 +6,7 @@
 //
 
 import FirebaseFirestore
+import FirebaseFunctions
 public import Combine
 
 final class CommentReportsAdminViewModel: ObservableObject {
@@ -47,6 +48,23 @@ final class CommentReportsAdminViewModel: ObservableObject {
                 return
             }
             self?.dismissReport(report, completion: completion)
+        }
+    }
+    
+    func deleteCommentAndBanAuthor(_ report: CommentReport, completion: @escaping (Bool) -> Void = { _ in }) {
+        db.collection("News").document(report.newsId).collection("comments").document(report.commentId).delete { [weak self] error in
+            guard let self else { return }
+            if let error {
+                print("CommentReports: не удалось удалить комментарий — \(error.localizedDescription)")
+                completion(false)
+                return
+            }
+            Functions.functions().httpsCallable("banParticipant").call(["uid": report.commentAuthorUid]) { _, error in
+                if let error {
+                    print("CommentReports: не удалось заблокировать автора — \(error.localizedDescription)")
+                }
+                self.dismissReport(report, completion: completion)
+            }
         }
     }
     

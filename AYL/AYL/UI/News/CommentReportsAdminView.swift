@@ -35,6 +35,11 @@ struct CommentReportsAdminView: View {
                                     }
                                     .font(.caption)
                                     .buttonStyle(.borderless)
+                                    Button("Удалить и заблокировать автора", role: .destructive) {
+                                        viewModel.deleteCommentAndBanAuthor(report)
+                                    }
+                                    .font(.caption)
+                                    .buttonStyle(.borderless)
                                     Spacer()
                                     Button("Оставить, закрыть жалобу") {
                                         viewModel.dismissReport(report)
