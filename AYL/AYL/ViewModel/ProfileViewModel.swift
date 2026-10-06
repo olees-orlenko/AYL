@@ -114,7 +114,7 @@ final class ProfileViewModel: ObservableObject {
                 id: uid,
                 name: data["name"] as? String ?? "",
                 phone: data["phone"] as? String ?? "",
-                role: ParticipantRole(rawValue: data["role"] as? String ?? "") ?? .alpha,
+                role: ParticipantRole(rawValue: data["role"] as? String ?? "") ?? .unspecified,
                 email: data["email"] as? String ?? "",
                 createdAt: timestamp.dateValue(),
                 photoUrl: data["photoUrl"] as? String,

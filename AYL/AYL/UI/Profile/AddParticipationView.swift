@@ -16,7 +16,7 @@ struct AddParticipationView: View {
 
     @State private var eventTitle = ""
     @State private var eventDate = Date()
-    @State private var role: ParticipantRole = .alpha
+    @State private var role: ParticipantRole = .unspecified
 
     private var isFormValid: Bool {
         !eventTitle.trimmingCharacters(in: .whitespaces).isEmpty

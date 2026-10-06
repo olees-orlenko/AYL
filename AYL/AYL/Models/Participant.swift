@@ -8,29 +8,37 @@
 import Foundation
 
 enum ParticipantRole: String, CaseIterable, Identifiable, Codable {
+    case unspecified
     case alpha
     case beta
     case gamma
-    
+    case director
+
     var id: String { rawValue }
-    
+
     var symbol: String {
         switch self {
+        case .unspecified: return ""
         case .alpha: return "α"
         case .beta: return "β"
         case .gamma: return "γ"
+        case .director: return "ИД"
         }
     }
-    
+
     var title: String {
         switch self {
+        case .unspecified: return "Гость"
         case .alpha: return "Альфа (делегат)"
         case .beta: return "Бета (ведущий)"
         case .gamma: return "Гамма (программный координатор)"
+        case .director: return "Исполнительный директор"
         }
     }
-    
-    var displayName: String { "\(symbol) — \(title)" }
+
+    var displayName: String {
+        symbol.isEmpty ? title : "\(symbol) — \(title)"
+    }
 }
 
 struct Participant: Identifiable {

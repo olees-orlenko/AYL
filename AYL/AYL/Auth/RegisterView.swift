@@ -16,7 +16,7 @@ struct RegisterView: View {
     
     @State private var name = ""
     @State private var phone = ""
-    @State private var role: ParticipantRole = .alpha
+    @State private var role: ParticipantRole = .unspecified
     @State private var email = ""
     @State private var password = ""
     @State private var acceptedTerms = false

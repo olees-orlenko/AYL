@@ -17,7 +17,7 @@ final class EventSignupManager: ObservableObject {
     
     private let db = Firestore.firestore()
     private var currentUid: String?
-    private var currentRole: ParticipantRole = .alpha
+    private var currentRole: ParticipantRole = .unspecified
     
     func load(uid: String?) {
         currentUid = uid
@@ -30,7 +30,7 @@ final class EventSignupManager: ObservableObject {
         participantRef.getDocument { [weak self] snapshot, _ in
             guard let self else { return }
             if let roleRaw = snapshot?.data()?["role"] as? String {
-                self.currentRole = ParticipantRole(rawValue: roleRaw) ?? .alpha
+                self.currentRole = ParticipantRole(rawValue: roleRaw) ?? .unspecified
             }
         }
         participantRef.collection("eventSignups")
