@@ -18,7 +18,6 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         settings.cacheSettings = PersistentCacheSettings()
         Firestore.firestore().settings = settings
         PushNotificationManager.shared.configure()
-        PushNotificationManager.shared.requestAuthorizationAndRegister()
         return true
     }
     

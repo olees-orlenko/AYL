@@ -42,8 +42,23 @@ struct Participant: Identifiable {
     let createdAt: Date
     let photoUrl: String?
     let blockedUsers: [String: String]
-    
-    init(id: String, name: String, phone: String, role: ParticipantRole, email: String, createdAt: Date, photoUrl: String? = nil, blockedUsers: [String: String] = [:]) {
+    var personalDataConsentAt: Date?
+    var marketingPushConsent: Bool
+    var marketingPushConsentAt: Date?
+
+    init(
+        id: String,
+        name: String,
+        phone: String,
+        role: ParticipantRole,
+        email: String,
+        createdAt: Date,
+        photoUrl: String? = nil,
+        blockedUsers: [String: String] = [:],
+        personalDataConsentAt: Date? = nil,
+        marketingPushConsent: Bool = false,
+        marketingPushConsentAt: Date? = nil
+    ) {
         self.id = id
         self.name = name
         self.phone = phone
@@ -52,5 +67,8 @@ struct Participant: Identifiable {
         self.createdAt = createdAt
         self.photoUrl = photoUrl
         self.blockedUsers = blockedUsers
+        self.personalDataConsentAt = personalDataConsentAt
+        self.marketingPushConsent = marketingPushConsent
+        self.marketingPushConsentAt = marketingPushConsentAt
     }
 }

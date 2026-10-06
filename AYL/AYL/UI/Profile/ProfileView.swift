@@ -33,7 +33,7 @@ struct ProfileView: View {
     @State private var showingCommentReportsAdmin = false
     @State private var showingBlockedUsers = false
     @State private var showingBannedUsersAdmin = false
-    @AppStorage(pushEnabledDefaultsKey) private var pushEnabled = true
+    @AppStorage(pushEnabledDefaultsKey) private var pushEnabled = false
     
     // MARK: - Body
     
@@ -104,7 +104,13 @@ struct ProfileView: View {
                 handlePhotoPicked(newItem)
             }
             .onChange(of: pushEnabled) { _, newValue in
+                if newValue {
+                    PushNotificationManager.shared.requestAuthorizationAndRegister()
+                }
                 PushNotificationManager.shared.setPushEnabled(newValue)
+                if authManager.isParticipantLoggedIn {
+                    viewModel.updateMarketingConsent(newValue)
+                }
             }
             .onChange(of: viewModel.participations.count) { _, _ in
                 loadCertificateStatuses()
@@ -181,11 +187,11 @@ struct ProfileView: View {
                     .foregroundColor(.violet)
             }
             Toggle(isOn: $pushEnabled) {
-                Text("Push-уведомления")
+                Text("Анонсы мероприятий и акций")
                     .font(.system(size: 16, weight: .medium))
             }
             .tint(.minty)
-            Text("О новых мероприятиях и напоминания за день до начала")
+            Text("Рекламные push о новых мероприятиях. Можно отключить в любой момент.")
                 .font(.caption)
                 .foregroundColor(.secondary)
         }

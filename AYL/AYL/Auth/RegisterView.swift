@@ -8,12 +8,12 @@
 import SwiftUI
 
 struct RegisterView: View {
-
+    
     // MARK: - Properties
-
+    
     @Environment(\.dismiss) var dismiss
     @ObservedObject var viewModel: ProfileViewModel
-
+    
     @State private var name = ""
     @State private var phone = ""
     @State private var role: ParticipantRole = .alpha
@@ -21,16 +21,19 @@ struct RegisterView: View {
     @State private var password = ""
     @State private var acceptedTerms = false
     @State private var showingTerms = false
-
+    @State private var acceptedPersonalData = false
+    @State private var showingPersonalDataPolicy = false
+    
     private var isFormValid: Bool {
         !name.trimmingCharacters(in: .whitespaces).isEmpty &&
         !email.trimmingCharacters(in: .whitespaces).isEmpty &&
         password.count >= 6 &&
         acceptedTerms
+        && acceptedPersonalData
     }
-
+    
     // MARK: - Body
-
+    
     var body: some View {
         NavigationStack {
             Form {
@@ -56,18 +59,19 @@ struct RegisterView: View {
                     }
                 }
                 Section {
-                    HStack {
-                        Toggle("", isOn: $acceptedTerms)
-                            .labelsHidden()
-                        Button {
+                    Toggle(isOn: $acceptedTerms) {
+                        Button("Я принимаю условия использования") {
                             showingTerms = true
-                        } label: {
-                            Text("Я принимаю условия использования")
-                                .font(.subheadline)
-                                .foregroundColor(.primary)
-                                .underline()
                         }
-                        Spacer()
+                        .font(.subheadline)
+                        .underline()
+                    }
+                    Toggle(isOn: $acceptedPersonalData) {
+                        Button("Я даю согласие на обработку персональных данных") {
+                            showingPersonalDataPolicy = true
+                        }
+                        .font(.subheadline)
+                        .underline()
                     }
                 }
                 Button {
@@ -94,11 +98,13 @@ struct RegisterView: View {
             .sheet(isPresented: $showingTerms) {
                 TermsOfServiceView()
             }
+            .sheet(isPresented: $showingPersonalDataPolicy) { PersonalDataPolicyView()
+            }
         }
     }
-
+    
     // MARK: - Private methods
-
+    
     private func register() {
         viewModel.register(name: name, phone: phone, role: role, email: email, password: password) { success in
             if success {

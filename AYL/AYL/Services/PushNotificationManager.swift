@@ -19,11 +19,11 @@ final class PushNotificationManager: NSObject {
     static let shared = PushNotificationManager()
 
     private let db = Firestore.firestore()
-
+    
     var isPushEnabled: Bool {
-        UserDefaults.standard.object(forKey: pushEnabledDefaultsKey) as? Bool ?? true
+        UserDefaults.standard.object(forKey: pushEnabledDefaultsKey) as? Bool ?? false
     }
-
+    
     private override init() {
         super.init()
     }

@@ -52,7 +52,8 @@ final class ProfileViewModel: ObservableObject {
                 "phone": phone.trimmingCharacters(in: .whitespaces),
                 "role": role.rawValue,
                 "email": email.trimmingCharacters(in: .whitespaces),
-                "createdAt": FieldValue.serverTimestamp()
+                "createdAt": FieldValue.serverTimestamp(),
+                "personalDataConsentAt": FieldValue.serverTimestamp()
             ]
             self.db.collection("participants").document(uid).setData(data) { error in
                 self.isSaving = false
@@ -117,7 +118,10 @@ final class ProfileViewModel: ObservableObject {
                 email: data["email"] as? String ?? "",
                 createdAt: timestamp.dateValue(),
                 photoUrl: data["photoUrl"] as? String,
-                blockedUsers: data["blockedUsers"] as? [String: String] ?? [:]
+                blockedUsers: data["blockedUsers"] as? [String: String] ?? [:],
+                personalDataConsentAt: (data["personalDataConsentAt"] as? Timestamp)?.dateValue(),
+                marketingPushConsent: data["marketingPushConsent"] as? Bool ?? false,
+                marketingPushConsentAt: (data["marketingPushConsentAt"] as? Timestamp)?.dateValue()
             )
         }
     }
@@ -150,10 +154,33 @@ final class ProfileViewModel: ObservableObject {
                 email: participant.email,
                 createdAt: participant.createdAt,
                 photoUrl: participant.photoUrl,
-                blockedUsers: participant.blockedUsers
+                blockedUsers: participant.blockedUsers,
+                personalDataConsentAt: participant.personalDataConsentAt,
+                marketingPushConsent: participant.marketingPushConsent,
+                marketingPushConsentAt: participant.marketingPushConsentAt
             )
             completion(true)
         }
+    }
+    
+    func updateMarketingConsent(_ enabled: Bool) {
+        guard let participant else { return }
+        var data: [String: Any] = ["marketingPushConsent": enabled]
+        data["marketingPushConsentAt"] = enabled ? FieldValue.serverTimestamp() : FieldValue.delete()
+        db.collection("participants").document(participant.id).updateData(data)
+        self.participant = Participant(
+            id: participant.id,
+            name: participant.name,
+            phone: participant.phone,
+            role: participant.role,
+            email: participant.email,
+            createdAt: participant.createdAt,
+            photoUrl: participant.photoUrl,
+            blockedUsers: participant.blockedUsers,
+            personalDataConsentAt: participant.personalDataConsentAt,
+            marketingPushConsent: enabled,
+            marketingPushConsentAt: enabled ? Date() : nil
+        )
     }
     
     func deleteAccount(password: String, completion: @escaping (Bool) -> Void) {
@@ -238,7 +265,10 @@ final class ProfileViewModel: ObservableObject {
                             email: participant.email,
                             createdAt: participant.createdAt,
                             photoUrl: url.absoluteString,
-                            blockedUsers: participant.blockedUsers
+                            blockedUsers: participant.blockedUsers,
+                            personalDataConsentAt: participant.personalDataConsentAt,
+                            marketingPushConsent: participant.marketingPushConsent,
+                            marketingPushConsentAt: participant.marketingPushConsentAt
                         )
                         completion(true)
                     }
