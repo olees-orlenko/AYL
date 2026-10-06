@@ -14,6 +14,8 @@ struct NewsCommentsView: View {
     let newsId: String
     @EnvironmentObject var authManager: AuthManager
     @StateObject private var viewModel = NewsCommentsViewModel()
+    @StateObject private var quizViewModel = QuizViewModel()
+    @State private var selectedProfile: PublicProfile? = nil
     @Environment(\.dismiss) var dismiss
     @State private var newCommentText = ""
     @State private var showingReportConfirmation = false
@@ -71,6 +73,11 @@ struct NewsCommentsView: View {
             .onAppear {
                 viewModel.loadFirstPage(newsId: newsId)
                 viewModel.loadBlockedUsers(currentUid: authManager.currentUserId)
+                quizViewModel.fetchLeaderboard()
+            }
+            .sheet(item: $selectedProfile) { profile in
+                QuizParticipantProfileView(profile: profile, viewModel: quizViewModel)
+                    .environmentObject(authManager)
             }
             .alert("Жалоба отправлена", isPresented: $showingReportConfirmation) {
                 Button("Ок", role: .cancel) {}
@@ -100,9 +107,14 @@ struct NewsCommentsView: View {
     private func commentRow(_ comment: NewsComment) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
-                Text(comment.authorName)
-                    .font(.subheadline.bold())
-                    .foregroundColor(.minty)
+                Button {
+                    openProfile(for: comment)
+                } label: {
+                    Text(comment.authorName)
+                        .font(.subheadline.bold())
+                        .foregroundColor(.minty)
+                }
+                .buttonStyle(.plain)
                 Spacer()
                 Text(comment.createdAt.formatted(date: .abbreviated, time: .shortened))
                     .font(.caption2)
@@ -148,6 +160,12 @@ struct NewsCommentsView: View {
             if success {
                 showingReportConfirmation = true
             }
+        }
+    }
+    
+    private func openProfile(for comment: NewsComment) {
+        quizViewModel.fetchPublicProfile(uid: comment.authorUid) { profile in
+            selectedProfile = profile
         }
     }
     

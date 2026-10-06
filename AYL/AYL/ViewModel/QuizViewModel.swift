@@ -120,6 +120,43 @@ class QuizViewModel: ObservableObject {
             }
     }
     
+    func fetchPublicProfile(uid: String, completion: @escaping (PublicProfile?) -> Void) {
+        db.collection("PublicProfiles").document(uid).getDocument { [weak self] snapshot, _ in
+            guard let self else { return }
+            if let data = snapshot?.data(),
+               let name = data["name"] as? String,
+               let roleRaw = data["role"] as? String,
+               let role = ParticipantRole(rawValue: roleRaw) {
+                completion(PublicProfile(
+                    id: uid,
+                    name: name,
+                    role: role,
+                    photoUrl: data["photoUrl"] as? String,
+                    quizBestScore: data["quizBestScore"] as? Int ?? 0,
+                    quizBestTotal: data["quizBestTotal"] as? Int ?? 0
+                ))
+                return
+            }
+            self.db.collection("participants").document(uid).getDocument { snapshot, _ in
+                guard let data = snapshot?.data(),
+                      let name = data["name"] as? String,
+                      let roleRaw = data["role"] as? String,
+                      let role = ParticipantRole(rawValue: roleRaw) else {
+                    completion(nil)
+                    return
+                }
+                completion(PublicProfile(
+                    id: uid,
+                    name: name,
+                    role: role,
+                    photoUrl: data["photoUrl"] as? String,
+                    quizBestScore: 0,
+                    quizBestTotal: 0
+                ))
+            }
+        }
+    }
+    
     // MARK: - Result
     
     func fetchMyProfileSummary(uid: String, completion: @escaping (QuizProfileSummary?) -> Void) {

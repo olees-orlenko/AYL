@@ -187,7 +187,7 @@ struct ProfileView: View {
                     .foregroundColor(.violet)
             }
             Toggle(isOn: $pushEnabled) {
-                Text("Анонсы мероприятий и акций")
+                Text("Анонсы мероприятий")
                     .font(.system(size: 16, weight: .medium))
             }
             .tint(.minty)
