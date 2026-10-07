@@ -29,18 +29,19 @@ struct QuizLeaderboardView: View {
                     emptyState
                 } else {
                     List {
-                        ForEach(Array(viewModel.leaderboard.enumerated()), id: \.element.id) { index, profile in
+                        ForEach(rankedLeaderboard, id: \.profile.id) { item in
                             Button {
-                                selectedProfile = profile
+                                selectedProfile = item.profile
                             } label: {
-                                leaderboardRow(place: index + 1, profile: profile)
+                                leaderboardRow(place: item.place, profile: item.profile)
                             }
-                            .buttonStyle(PlainButtonStyle())
-                            .listRowBackground(
-                                Color(.secondarySystemBackground).opacity(0.85)
-                            )
+                            .buttonStyle(.plain)
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(Color.clear)
+                            .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
                         }
                     }
+                    .listStyle(.plain)
                     .scrollContentBackground(.hidden)
                 }
             }
@@ -64,6 +65,22 @@ struct QuizLeaderboardView: View {
         }
     }
     
+    // MARK: - Ranking
+    
+    private var rankedLeaderboard: [(place: Int, profile: PublicProfile)] {
+        var result: [(place: Int, profile: PublicProfile)] = []
+        var lastScore: Int? = nil
+        var place = 0
+        for profile in viewModel.leaderboard {
+            if profile.quizBestScore != lastScore {
+                place += 1
+                lastScore = profile.quizBestScore
+            }
+            result.append((place, profile))
+        }
+        return result
+    }
+    
     // MARK: - Subviews
     
     private func leaderboardRow(place: Int, profile: PublicProfile) -> some View {
@@ -82,7 +99,22 @@ struct QuizLeaderboardView: View {
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundColor(.minty)
         }
-        .padding(.vertical, place <= 3 ? 6 : 4)
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(cardBackground(for: place))
+        .cornerRadius(14)
+        .overlay(
+            RoundedRectangle(cornerRadius: 14)
+                .strokeBorder(medalColor(for: place) ?? .clear, lineWidth: medalColor(for: place) != nil ? 1.5 : 0)
+        )
+        .shadow(color: Color.black.opacity(0.03), radius: 6, x: 0, y: 3)
+    }
+    
+    private func cardBackground(for place: Int) -> Color {
+        if let medalColor = medalColor(for: place) {
+            return medalColor.opacity(0.12)
+        }
+        return Color(.secondarySystemBackground)
     }
     
     private var emptyState: some View {
