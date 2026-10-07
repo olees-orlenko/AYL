@@ -13,6 +13,7 @@ enum ParticipantRole: String, CaseIterable, Identifiable, Codable {
     case beta
     case gamma
     case director
+    case graduate
 
     var id: String { rawValue }
 
@@ -23,6 +24,7 @@ enum ParticipantRole: String, CaseIterable, Identifiable, Codable {
         case .beta: return "β"
         case .gamma: return "γ"
         case .director: return "ИД"
+        case .graduate: return ""
         }
     }
 
@@ -33,6 +35,7 @@ enum ParticipantRole: String, CaseIterable, Identifiable, Codable {
         case .beta: return "Бета (ведущий)"
         case .gamma: return "Гамма (программный координатор)"
         case .director: return "Исполнительный директор"
+        case .graduate: return "Выпускник"
         }
     }
 
