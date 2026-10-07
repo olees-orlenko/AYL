@@ -116,9 +116,11 @@ struct NewsCommentsView: View {
                 }
                 .buttonStyle(.plain)
                 Spacer()
-                Text(comment.createdAt.formatted(date: .abbreviated, time: .shortened))
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+                Text(comment.createdAt.formatted(
+                    Date.FormatStyle(date: .abbreviated, time: .shortened, locale: Locale(identifier: "ru_RU"))
+                ))
+                .font(.caption2)
+                .foregroundColor(.secondary)
             }
             Text(comment.text)
                 .font(.body)
