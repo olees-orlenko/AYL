@@ -77,7 +77,36 @@ final class NewsCommentsViewModel: ObservableObject {
               let authorName = data["authorName"] as? String,
               let text = data["text"] as? String,
               let timestamp = data["createdAt"] as? Timestamp else { return nil }
-        return NewsComment(id: doc.documentID, authorUid: authorUid, authorName: authorName, text: text, createdAt: timestamp.dateValue())
+        return NewsComment(id: doc.documentID, authorUid: authorUid, authorName: authorName, text: text, createdAt: timestamp.dateValue(), reactions: data["reactions"] as? [String: String] ?? [:])
+    }
+    
+    // MARK: - Reactions
+
+    func toggleReaction(_ comment: NewsComment, emoji: String, uid: String, newsId: String) {
+        let isRemoving = comment.reactions[uid] == emoji
+        let ref = db.collection("News").document(newsId).collection("comments").document(comment.id)
+        ref.updateData(["reactions.\(uid)": isRemoving ? FieldValue.delete() : emoji]) { [weak self] error in
+            guard let self else { return }
+            if let error {
+                print("Comments: не удалось обновить реакцию — \(error.localizedDescription)")
+                return
+            }
+            guard let index = self.comments.firstIndex(where: { $0.id == comment.id }) else { return }
+            var updatedReactions = self.comments[index].reactions
+            if isRemoving {
+                updatedReactions.removeValue(forKey: uid)
+            } else {
+                updatedReactions[uid] = emoji
+            }
+            self.comments[index] = NewsComment(
+                id: comment.id,
+                authorUid: comment.authorUid,
+                authorName: comment.authorName,
+                text: comment.text,
+                createdAt: comment.createdAt,
+                reactions: updatedReactions
+            )
+        }
     }
     
     // MARK: - Posting

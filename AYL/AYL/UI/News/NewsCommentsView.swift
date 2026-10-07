@@ -19,11 +19,14 @@ struct NewsCommentsView: View {
     @Environment(\.dismiss) var dismiss
     @State private var newCommentText = ""
     @State private var showingReportConfirmation = false
+    @State private var reactingComment: NewsComment? = nil
     @FocusState private var isInputFocused: Bool
     
     private var visibleComments: [NewsComment] {
         viewModel.comments.filter { !viewModel.blockedUserIds.contains($0.authorUid) }
     }
+    
+    private let reactionEmojis = ["👍", "❤️", "😂", "🤔", "🔥", "👎"]
     
     // MARK: - Body
     
@@ -84,6 +87,16 @@ struct NewsCommentsView: View {
             } message: {
                 Text("Спасибо, мы проверим этот комментарий.")
             }
+            .overlay {
+                if let comment = reactingComment {
+                    ReactionPickerOverlay(emojis: reactionEmojis) { emoji in
+                        toggleReaction(comment, emoji: emoji)
+                        withAnimation { reactingComment = nil }
+                    } onDismiss: {
+                        withAnimation { reactingComment = nil }
+                    }
+                }
+            }
         }
     }
     
@@ -105,29 +118,41 @@ struct NewsCommentsView: View {
     // MARK: - Row
     
     private func commentRow(_ comment: NewsComment) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Button {
-                    openProfile(for: comment)
-                } label: {
-                    Text(comment.authorName)
-                        .font(.subheadline.bold())
-                        .foregroundColor(.minty)
-                }
-                .buttonStyle(.plain)
-                Spacer()
-                Text(comment.createdAt.formatted(
-                    Date.FormatStyle(date: .abbreviated, time: .shortened, locale: Locale(identifier: "ru_RU"))
-                ))
-                .font(.caption2)
-                .foregroundColor(.secondary)
+        Button {
+            guard authManager.isParticipantLoggedIn || authManager.isAdminLoggedIn else { return }
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                reactingComment = comment
             }
-            Text(comment.text)
-                .font(.body)
-                .foregroundColor(.primary)
+        } label: {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Button {
+                        openProfile(for: comment)
+                    } label: {
+                        Text(comment.authorName)
+                            .font(.subheadline.bold())
+                            .foregroundColor(.minty)
+                    }
+                    .buttonStyle(.plain)
+                    Spacer()
+                    Text(comment.createdAt.formatted(
+                        Date.FormatStyle(date: .abbreviated, time: .shortened, locale: Locale(identifier: "ru_RU"))
+                    ))
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                }
+                Text(comment.text)
+                    .font(.body)
+                    .foregroundColor(.primary)
+                if !comment.reactions.isEmpty {
+                    reactionSummary(for: comment)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
         .padding()
-        .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(.secondarySystemBackground))
         .cornerRadius(14)
         .shadow(color: Color.black.opacity(0.03), radius: 6, x: 0, y: 3)
@@ -154,6 +179,35 @@ struct NewsCommentsView: View {
                 .tint(.red)
             }
         }
+    }
+    
+    // MARK: - Reactions
+    
+    private func reactionSummary(for comment: NewsComment) -> some View {
+        HStack(spacing: 6) {
+            ForEach(reactionEmojis.filter { comment.reactions.values.contains($0) }, id: \.self) { emoji in
+                let count = comment.reactions.values.filter { $0 == emoji }.count
+                let isMine = authManager.currentUserId.map { comment.reactions[$0] == emoji } ?? false
+                HStack(spacing: 2) {
+                    Text(emoji)
+                        .font(.system(size: 13))
+                    Text("\(count)")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(isMine ? .white : .secondary)
+                }
+                .padding(.horizontal, 6)
+                .padding(.vertical, 2)
+                .background(isMine ? Color.minty : Color(.tertiarySystemBackground))
+                .clipShape(Capsule())
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.top, 2)
+    }
+    
+    private func toggleReaction(_ comment: NewsComment, emoji: String) {
+        guard let uid = authManager.currentUserId else { return }
+        viewModel.toggleReaction(comment, emoji: emoji, uid: uid, newsId: newsId)
     }
     
     private func report(_ comment: NewsComment) {
@@ -221,5 +275,42 @@ struct NewsCommentsView: View {
                 newCommentText = ""
             }
         }
+    }
+}
+
+// MARK: - Reaction Picker Overlay
+
+private struct ReactionPickerOverlay: View {
+    let emojis: [String]
+    let onSelect: (String) -> Void
+    let onDismiss: () -> Void
+    
+    var body: some View {
+        ZStack {
+            Color.clear
+                .contentShape(Rectangle())
+                .ignoresSafeArea()
+                .onTapGesture { onDismiss() }
+            
+            HStack(spacing: 10) {
+                ForEach(emojis, id: \.self) { emoji in
+                    Button {
+                        onSelect(emoji)
+                    } label: {
+                        Text(emoji)
+                            .font(.system(size: 24))
+                            .frame(width: 44, height: 44)
+                            .background(Color(.secondarySystemBackground))
+                            .clipShape(Circle())
+                    }
+                }
+            }
+            .padding(10)
+            .background(.ultraThinMaterial)
+            .clipShape(Capsule())
+            .shadow(radius: 8)
+        }
+        .transition(.opacity.combined(with: .scale(scale: 0.9)))
+        .zIndex(10)
     }
 }

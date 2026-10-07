@@ -66,16 +66,17 @@ service cloud.firestore {
       allow update: if isAdmin();
       allow delete: if false;
     }
-    match /News/{newsId}/comments/{commentId} {
+    match /News/{newsId}/comments/{commentId} { 
       allow read: if true;
-      allow create: if request.auth != null
-                && request.resource.data.authorUid == request.auth.uid
-                && request.resource.data.text is string
-                && request.resource.data.text.size() > 0
-                && request.resource.data.text.size() <= 1000;
-      allow delete: if request.auth != null
+      allow create: if request.auth != null 
+                && request.resource.data.authorUid == request.auth.uid 
+                && request.resource.data.text is string && request.resource.data.text.size() > 0 
+                && request.resource.data.text.size() <= 1000; 
+      allow delete: if request.auth != null 
                 && (resource.data.authorUid == request.auth.uid || isAdmin());
-      allow update: if false;
+      allow update: if request.auth != null 
+                && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions']) 
+                && request.resource.data.reactions.diff(resource.data.get('reactions', {})).affectedKeys().hasOnly([request.auth.uid]); 
     }
     match /CommentReports/{reportId} {
       allow create: if request.auth != null

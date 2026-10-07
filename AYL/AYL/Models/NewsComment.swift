@@ -13,4 +13,5 @@ struct NewsComment: Identifiable, Equatable {
     let authorName: String
     let text: String
     let createdAt: Date
+    let reactions: [String: String]
 }
