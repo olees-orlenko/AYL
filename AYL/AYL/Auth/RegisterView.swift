@@ -42,7 +42,7 @@ struct RegisterView: View {
                     TextField("Телефон", text: $phone)
                         .keyboardType(.phonePad)
                     Picker("Роль", selection: $role) {
-                        ForEach(ParticipantRole.allCases) { role in
+                        ForEach(ParticipantRole.profileRoles) { role in
                             Text(role.displayName).tag(role)
                         }
                     }

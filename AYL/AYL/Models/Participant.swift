@@ -14,9 +14,11 @@ enum ParticipantRole: String, CaseIterable, Identifiable, Codable {
     case gamma
     case director
     case graduate
-
+    case eventDirector
+    case adminTeam
+    
     var id: String { rawValue }
-
+    
     var symbol: String {
         switch self {
         case .unspecified: return ""
@@ -25,9 +27,11 @@ enum ParticipantRole: String, CaseIterable, Identifiable, Codable {
         case .gamma: return "γ"
         case .director: return "ИД"
         case .graduate: return ""
+        case .eventDirector: return ""
+        case .adminTeam: return "АК"
         }
     }
-
+    
     var title: String {
         switch self {
         case .unspecified: return "Гость"
@@ -36,11 +40,21 @@ enum ParticipantRole: String, CaseIterable, Identifiable, Codable {
         case .gamma: return "Гамма (программный координатор)"
         case .director: return "Исполнительный директор"
         case .graduate: return "Выпускник"
+        case .eventDirector: return "Директор"
+        case .adminTeam: return "Административная команда"
         }
     }
-
+    
     var displayName: String {
         symbol.isEmpty ? title : "\(symbol) — \(title)"
+    }
+    
+    static var participationRoles: [ParticipantRole] {
+        allCases.filter { $0 != .graduate }
+    }
+    
+    static var profileRoles: [ParticipantRole] {
+        allCases.filter { $0 != .adminTeam && $0 != .eventDirector }
     }
 }
 
@@ -56,7 +70,7 @@ struct Participant: Identifiable {
     var personalDataConsentAt: Date?
     var marketingPushConsent: Bool
     var marketingPushConsentAt: Date?
-
+    
     init(
         id: String,
         name: String,

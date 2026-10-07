@@ -8,22 +8,22 @@
 import SwiftUI
 
 struct AddParticipationView: View {
-
+    
     // MARK: - Properties
-
+    
     @Environment(\.dismiss) var dismiss
     @ObservedObject var viewModel: ProfileViewModel
-
+    
     @State private var eventTitle = ""
     @State private var eventDate = Date()
     @State private var role: ParticipantRole = .unspecified
-
+    
     private var isFormValid: Bool {
         !eventTitle.trimmingCharacters(in: .whitespaces).isEmpty
     }
-
+    
     // MARK: - Body
-
+    
     var body: some View {
         NavigationStack {
             Form {
@@ -32,7 +32,7 @@ struct AddParticipationView: View {
                     DatePicker("Дата", selection: $eventDate, displayedComponents: .date)
                         .environment(\.locale, Locale(identifier: "ru_RU"))
                     Picker("Роль на этом мероприятии", selection: $role) {
-                        ForEach(ParticipantRole.allCases) { role in
+                        ForEach(ParticipantRole.participationRoles) { role in
                             Text(role.displayName).tag(role)
                         }
                     }
@@ -65,9 +65,9 @@ struct AddParticipationView: View {
             }
         }
     }
-
+    
     // MARK: - Private methods
-
+    
     private func save() {
         viewModel.addParticipation(eventTitle: eventTitle, eventDate: eventDate, role: role) { success in
             if success {

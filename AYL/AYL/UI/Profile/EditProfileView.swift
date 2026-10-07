@@ -8,19 +8,19 @@
 import SwiftUI
 
 struct EditProfileView: View {
-
+    
     // MARK: - Properties
-
+    
     @Environment(\.dismiss) var dismiss
     @ObservedObject var viewModel: ProfileViewModel
     let participant: Participant
-
+    
     @State private var name: String
     @State private var phone: String
     @State private var role: ParticipantRole
-
+    
     // MARK: - Init
-
+    
     init(viewModel: ProfileViewModel, participant: Participant) {
         self.viewModel = viewModel
         self.participant = participant
@@ -28,9 +28,9 @@ struct EditProfileView: View {
         _phone = State(initialValue: participant.phone)
         _role = State(initialValue: participant.role)
     }
-
+    
     // MARK: - Body
-
+    
     var body: some View {
         NavigationStack {
             Form {
@@ -39,7 +39,7 @@ struct EditProfileView: View {
                     TextField("Телефон", text: $phone)
                         .keyboardType(.phonePad)
                     Picker("Роль", selection: $role) {
-                        ForEach(ParticipantRole.allCases) { role in
+                        ForEach(ParticipantRole.profileRoles) { role in
                             Text(role.displayName).tag(role)
                         }
                     }
@@ -72,9 +72,9 @@ struct EditProfileView: View {
             }
         }
     }
-
+    
     // MARK: - Private methods
-
+    
     private func save() {
         viewModel.updateProfile(name: name, phone: phone, role: role) { success in
             if success {
