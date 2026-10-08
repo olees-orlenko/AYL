@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "exclmark 1.png",
+      "filename" : "hug.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "exclmark.png",
+      "filename" : "hug 1.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "exclmark 2.png",
+      "filename" : "hug 2.png",
       "idiom" : "universal",
       "scale" : "3x"
     }

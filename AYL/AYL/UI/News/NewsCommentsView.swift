@@ -26,7 +26,7 @@ struct NewsCommentsView: View {
         viewModel.comments.filter { !viewModel.blockedUserIds.contains($0.authorUid) }
     }
     
-    private let reactionEmojis = ["reaction_exclaim", "reaction_heart", "reaction_question", "reaction_wave", "reaction_sparkle"]
+    private let reactionEmojis = ["reaction_fire", "reaction_heart", "reaction_hug", "reaction_laugh", "reaction_sparkle", "reaction_cry"]
     
     // MARK: - Body
     
@@ -199,7 +199,7 @@ struct NewsCommentsView: View {
                 }
                 .padding(.horizontal, 6)
                 .padding(.vertical, 2)
-                .background(isMine ? Color.minty : Color(.tertiarySystemBackground))
+                .background(isMine ? Color.minty : Color.minty.opacity(0.25))
                 .clipShape(Capsule())
             }
             Spacer(minLength: 0)
@@ -293,7 +293,7 @@ private struct ReactionPickerOverlay: View {
                 .contentShape(Rectangle())
                 .ignoresSafeArea()
                 .onTapGesture { onDismiss() }
-            HStack(spacing: 10) {
+            HStack(spacing: 6) {
                 ForEach(emojis, id: \.self) { emoji in
                     Button {
                         onSelect(emoji)
@@ -301,14 +301,14 @@ private struct ReactionPickerOverlay: View {
                         Image(emoji)
                             .resizable()
                             .scaledToFit()
-                            .frame(width: 32, height: 32)
-                            .frame(width: 56, height: 56)
+                            .frame(width: 28, height: 28)
+                            .frame(width: 48, height: 48)
                             .background(Color.minty.opacity(0.25))
                             .clipShape(Circle())
                     }
                 }
             }
-            .padding(10)
+            .padding(8)
             .background(.ultraThinMaterial)
             .clipShape(Capsule())
             .shadow(radius: 8)

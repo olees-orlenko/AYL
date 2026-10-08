@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "smile.png",
+      "filename" : "laugh_blue.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "smile 1.png",
+      "filename" : "laugh_blue 1.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "smile 2.png",
+      "filename" : "laugh_blue 2.png",
       "idiom" : "universal",
       "scale" : "3x"
     }

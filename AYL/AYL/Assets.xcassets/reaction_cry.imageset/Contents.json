@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "questionmark.png",
+      "filename" : "cry.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "questionmark 1.png",
+      "filename" : "cry 1.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "questionmark 2.png",
+      "filename" : "cry 2.png",
       "idiom" : "universal",
       "scale" : "3x"
     }
