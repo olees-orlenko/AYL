@@ -26,7 +26,7 @@ struct NewsCommentsView: View {
         viewModel.comments.filter { !viewModel.blockedUserIds.contains($0.authorUid) }
     }
     
-    private let reactionEmojis = ["👍", "❤️", "😂", "🤔", "🔥", "👎"]
+    private let reactionEmojis = ["reaction_exclaim", "reaction_heart", "reaction_question", "reaction_wave", "reaction_sparkle"]
     
     // MARK: - Body
     
@@ -189,8 +189,10 @@ struct NewsCommentsView: View {
                 let count = comment.reactions.values.filter { $0 == emoji }.count
                 let isMine = authManager.currentUserId.map { comment.reactions[$0] == emoji } ?? false
                 HStack(spacing: 2) {
-                    Text(emoji)
-                        .font(.system(size: 13))
+                    Image(emoji)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 18, height: 18)
                     Text("\(count)")
                         .font(.system(size: 10, weight: .bold))
                         .foregroundColor(isMine ? .white : .secondary)
@@ -291,16 +293,17 @@ private struct ReactionPickerOverlay: View {
                 .contentShape(Rectangle())
                 .ignoresSafeArea()
                 .onTapGesture { onDismiss() }
-            
             HStack(spacing: 10) {
                 ForEach(emojis, id: \.self) { emoji in
                     Button {
                         onSelect(emoji)
                     } label: {
-                        Text(emoji)
-                            .font(.system(size: 24))
-                            .frame(width: 44, height: 44)
-                            .background(Color(.secondarySystemBackground))
+                        Image(emoji)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 32, height: 32)
+                            .frame(width: 56, height: 56)
+                            .background(Color.minty.opacity(0.25))
                             .clipShape(Circle())
                     }
                 }

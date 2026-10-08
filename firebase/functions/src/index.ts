@@ -217,6 +217,13 @@ export const deleteMyAccountData = onCall(async (request) => {
   certificateSnapshot.docs.forEach((doc) => certificateBatch.delete(doc.ref));
   await certificateBatch.commit();
 
+  const deviceTokenSnapshot = await db
+    .collection("deviceTokens")
+    .where("userId", "==", uid)
+    .get();
+  const deviceTokenBatch = db.batch();
+  deviceTokenSnapshot.docs.forEach((doc) => deviceTokenBatch.delete(doc.ref));
+  await deviceTokenBatch.commit();
   await getStorage().bucket().file(`participant_photos/${uid}.jpg`).delete().catch(() => undefined);
 
   // Сам Auth-аккаунт удаляем тоже здесь, на сервере — атомарно с чисткой данных.
