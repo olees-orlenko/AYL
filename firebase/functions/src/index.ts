@@ -1,18 +1,3 @@
-/**
- * Cloud Functions для push-уведомлений и личного кабинета приложения AYL.
- *
- * Три функции:
- *  1. onNewsCreated — срабатывает сразу при создании документа в коллекции "News".
- *     Если это мероприятие (isEvent === true), шлёт push всем подписчикам топика "news_all".
- *  2. sendEventReminders — расписание (каждый день в 09:00 по Москве). Находит мероприятия,
- *     которые пройдут завтра, и шлёт напоминание — один раз на мероприятие (флаг reminderSent).
- *  3. convertPastEventSignups — расписание (каждый день в 03:00 по Москве). Переносит записи
- *     participants/{uid}/eventSignups, чьё мероприятие уже прошло, в participants/{uid}/participations
- *     (историю участия) — так "Участие в мероприятиях" в кабинете заполняется само.
- *
- * Деплой: см. README.md рядом с этой папкой.
- */
-
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
@@ -27,20 +12,14 @@ initializeApp();
 const db = getFirestore();
 const messaging = getMessaging();
 
-/** Топик, на который подписывается каждое устройство при запуске приложения (см. PushNotificationManager.swift). */
 const TOPIC_ALL_USERS = "news_all";
 
-/** Москва — фиксированный UTC+3 (без перехода на летнее время с 2014 года). */
 const MOSCOW_OFFSET_MS = 3 * 60 * 60 * 1000;
 
 function truncate(text: string, maxLength: number): string {
   const trimmed = text.trim();
   return trimmed.length > maxLength ? `${trimmed.slice(0, maxLength - 1)}…` : trimmed;
 }
-
-// ──────────────────────────────────────────────────────────────────────────
-// 1. Push сразу при публикации нового мероприятия/конференции/тренинга
-// ──────────────────────────────────────────────────────────────────────────
 
 export const onNewsCreated = onDocumentCreated("News/{newsId}", async (event) => {
   const snapshot = event.data;
@@ -49,7 +28,6 @@ export const onNewsCreated = onDocumentCreated("News/{newsId}", async (event) =>
   }
   const news = snapshot.data();
 
-  // Обычные новости пуш не получают — только анонсы мероприятий.
   if (!news?.isEvent) {
     return;
   }
@@ -77,10 +55,6 @@ export const onNewsCreated = onDocumentCreated("News/{newsId}", async (event) =>
   }
 });
 
-// ──────────────────────────────────────────────────────────────────────────
-// 2. Ежедневное напоминание за день до мероприятия
-// ──────────────────────────────────────────────────────────────────────────
-
 export const sendEventReminders = onSchedule(
   { schedule: "0 9 * * *", timeZone: "Europe/Moscow" },
   async () => {
@@ -93,7 +67,6 @@ export const sendEventReminders = onSchedule(
     );
     const endOfTomorrowMoscow = startOfTomorrowMoscow + 24 * 60 * 60 * 1000;
 
-    // eventDate хранится как обычный UTC Timestamp — переводим границы "завтра по Москве" в UTC.
     const startUTC = new Date(startOfTomorrowMoscow - MOSCOW_OFFSET_MS);
     const endUTC = new Date(endOfTomorrowMoscow - MOSCOW_OFFSET_MS);
 
@@ -112,7 +85,6 @@ export const sendEventReminders = onSchedule(
     for (const doc of snapshot.docs) {
       const news = doc.data();
 
-      // Не слать повторно, если функция уже отправила напоминание по этому документу.
       if (news.reminderSent === true) {
         continue;
       }
@@ -140,16 +112,10 @@ export const sendEventReminders = onSchedule(
     }
   }
 );
-// ──────────────────────────────────────────────────────────────────────────
-// 3. ДОБАВЛЕНО: перенос прошедших записей "я тоже иду" в историю участия
-// ──────────────────────────────────────────────────────────────────────────
 
 export const convertPastEventSignups = onSchedule(
   { schedule: "0 3 * * *", timeZone: "Europe/Moscow" },
   async () => {
-    // collectionGroup — ищем eventSignups сразу у ВСЕХ участников, а не по одному.
-    // Требует включённого collection-group индекса по полю eventDate в консоли
-    // Firestore (Indexes → Collection group) — см. README.md.
     const snapshot = await db
       .collectionGroup("eventSignups")
       .where("eventDate", "<", Timestamp.now())
@@ -162,7 +128,7 @@ export const convertPastEventSignups = onSchedule(
 
     for (const doc of snapshot.docs) {
       const signup = doc.data();
-      const participantRef = doc.ref.parent.parent; // participants/{uid}
+      const participantRef = doc.ref.parent.parent;
       if (!participantRef) {
         continue;
       }
@@ -182,13 +148,6 @@ export const convertPastEventSignups = onSchedule(
     }
   }
 );
-// ──────────────────────────────────────────────────────────────────────────
-// 4. ИЗМЕНЕНО: удаление аккаунта — вызывается из приложения (не триггер), чтобы
-//    не зависеть от Gen1 и не упереться в потолок поддерживаемых версий Node.
-//    Проверяем, что вызывающий аутентифицирован, и удаляем ТОЛЬКО его же данные —
-//    request.auth.uid берётся из проверенного токена, а не от клиента, так что
-//    подделать чужой uid нельзя.
-// ──────────────────────────────────────────────────────────────────────────
 
 export const deleteMyAccountData = onCall(async (request) => {
   if (!request.auth) {
@@ -199,45 +158,63 @@ export const deleteMyAccountData = onCall(async (request) => {
   await db.recursiveDelete(db.collection("participants").doc(uid));
   await db.collection("PublicProfiles").doc(uid).delete().catch(() => undefined);
 
-  const contactSnapshots = await Promise.all([
-    db.collection("ContactRequests").where("fromUid", "==", uid).get(),
-    db.collection("ContactRequests").where("toUid", "==", uid).get(),
-  ]);
-  const contactBatch = db.batch();
-  for (const snapshot of contactSnapshots) {
-    snapshot.docs.forEach((doc) => contactBatch.delete(doc.ref));
+  try {
+    const contactSnapshots = await Promise.all([
+      db.collection("ContactRequests").where("fromUid", "==", uid).get(),
+      db.collection("ContactRequests").where("toUid", "==", uid).get(),
+    ]);
+    const contactBatch = db.batch();
+    for (const snapshot of contactSnapshots) {
+      snapshot.docs.forEach((doc) => contactBatch.delete(doc.ref));
+    }
+    await contactBatch.commit();
+  } catch (error) {
+    logger.error(`deleteMyAccountData: не удалось удалить ContactRequests для ${uid}`, error);
   }
-  await contactBatch.commit();
 
-  const certificateSnapshot = await db
-    .collection("CertificateRequests")
-    .where("participantUid", "==", uid)
-    .get();
-  const certificateBatch = db.batch();
-  certificateSnapshot.docs.forEach((doc) => certificateBatch.delete(doc.ref));
-  await certificateBatch.commit();
+  try {
+    const certificateSnapshot = await db
+      .collection("CertificateRequests")
+      .where("participantUid", "==", uid)
+      .get();
+    const certificateBatch = db.batch();
+    certificateSnapshot.docs.forEach((doc) => certificateBatch.delete(doc.ref));
+    await certificateBatch.commit();
+  } catch (error) {
+    logger.error(`deleteMyAccountData: не удалось удалить CertificateRequests для ${uid}`, error);
+  }
 
-  const deviceTokenSnapshot = await db
-    .collection("deviceTokens")
-    .where("userId", "==", uid)
-    .get();
-  const deviceTokenBatch = db.batch();
-  deviceTokenSnapshot.docs.forEach((doc) => deviceTokenBatch.delete(doc.ref));
-  await deviceTokenBatch.commit();
+  try {
+    const commentsSnapshot = await db
+      .collectionGroup("comments")
+      .where("authorUid", "==", uid)
+      .get();
+    const commentsBatch = db.batch();
+    commentsSnapshot.docs.forEach((doc) => commentsBatch.delete(doc.ref));
+    await commentsBatch.commit();
+  } catch (error) {
+    logger.error(`deleteMyAccountData: не удалось удалить комментарии для ${uid}`, error);
+  }
+
+  try {
+    const deviceTokenSnapshot = await db
+      .collection("deviceTokens")
+      .where("userId", "==", uid)
+      .get();
+    const deviceTokenBatch = db.batch();
+    deviceTokenSnapshot.docs.forEach((doc) => deviceTokenBatch.delete(doc.ref));
+    await deviceTokenBatch.commit();
+  } catch (error) {
+    logger.error(`deleteMyAccountData: не удалось удалить deviceTokens для ${uid}`, error);
+  }
+
   await getStorage().bucket().file(`participant_photos/${uid}.jpg`).delete().catch(() => undefined);
 
-  // Сам Auth-аккаунт удаляем тоже здесь, на сервере — атомарно с чисткой данных.
   await getAuth().deleteUser(uid);
 
   logger.info(`deleteMyAccountData: аккаунт и данные участника ${uid} удалены`);
   return { success: true };
 });
-// ──────────────────────────────────────────────────────────────────────────
-// 5. ДОБАВЛЕНО: блокировка нарушителя администратором — Apple Guideline 1.2
-//    требует не только удалить нарушающий контент, но и "eject" (заблокировать)
-//    его автора. Проверяем, что вызывающий — админ, и отключаем Auth-аккаунт
-//    нарушителя, чтобы он больше не мог войти и писать новые комментарии.
-// ──────────────────────────────────────────────────────────────────────────
 
 export const banParticipant = onCall(async (request) => {
   if (!request.auth) {
@@ -254,13 +231,14 @@ export const banParticipant = onCall(async (request) => {
 
   await getAuth().updateUser(targetUid, { disabled: true });
   await db.collection("participants").doc(targetUid).set(
-    { isBanned: true, bannedBy: request.auth.uid }, // ИЗМЕНЕНО: добавлено bannedBy — кто именно из админов забанил
+    { isBanned: true, bannedBy: request.auth.uid },
     { merge: true }
   );
 
   logger.info(`banParticipant: пользователь ${targetUid} заблокирован администратором ${request.auth.uid}`);
   return { success: true };
 });
+
 export const unbanParticipant = onCall(async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "Нужно быть авторизованным");
@@ -276,7 +254,7 @@ export const unbanParticipant = onCall(async (request) => {
 
   await getAuth().updateUser(targetUid, { disabled: false });
   await db.collection("participants").doc(targetUid).set(
-    { isBanned: false, bannedBy: FieldValue.delete() }, // ИЗМЕНЕНО: убираем bannedBy при разбане
+    { isBanned: false, bannedBy: FieldValue.delete() },
     { merge: true }
   );
 

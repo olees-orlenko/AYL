@@ -274,6 +274,7 @@ struct ProfileView: View {
                 Text("Не удалось загрузить профиль")
                     .foregroundColor(.secondary)
                 actionButton(title: "Повторить") { refresh() }
+                actionButton(title: "Выйти", isDestructive: true) { authManager.signOut() }
             }
             .frame(maxWidth: .infinity)
             .padding(.top, 40)
