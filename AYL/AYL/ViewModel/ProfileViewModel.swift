@@ -75,6 +75,7 @@ final class ProfileViewModel: ObservableObject {
                     completion(false)
                     return
                 }
+                PushNotificationManager.shared.attachCurrentTokenToLoggedInUser()
                 completion(true)
             }
         }
@@ -91,6 +92,7 @@ final class ProfileViewModel: ObservableObject {
                 completion(false)
                 return
             }
+            PushNotificationManager.shared.attachCurrentTokenToLoggedInUser()
             completion(true)
         }
     }

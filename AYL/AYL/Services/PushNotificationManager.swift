@@ -9,15 +9,16 @@ import Foundation
 import UserNotifications
 import FirebaseMessaging
 import FirebaseFirestore
+import FirebaseAuth
 
 let pushTopicAllUsers = "news_all"
 
 let pushEnabledDefaultsKey = "pushNotificationsEnabled"
 
 final class PushNotificationManager: NSObject {
-
+    
     static let shared = PushNotificationManager()
-
+    
     private let db = Firestore.firestore()
     
     var isPushEnabled: Bool {
@@ -27,7 +28,7 @@ final class PushNotificationManager: NSObject {
     private override init() {
         super.init()
     }
-
+    
     func setPushEnabled(_ enabled: Bool) {
         UserDefaults.standard.set(enabled, forKey: pushEnabledDefaultsKey)
         guard Messaging.messaging().apnsToken != nil else {
@@ -48,12 +49,12 @@ final class PushNotificationManager: NSObject {
             }
         }
     }
-
+    
     func configure() {
         UNUserNotificationCenter.current().delegate = self
         Messaging.messaging().delegate = self
     }
-
+    
     func requestAuthorizationAndRegister() {
         let center = UNUserNotificationCenter.current()
         center.requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
@@ -69,7 +70,7 @@ final class PushNotificationManager: NSObject {
             }
         }
     }
-
+    
     private func saveTokenToFirestore(_ token: String, userId: String? = nil) {
         var data: [String: Any] = [
             "token": token,
@@ -85,6 +86,12 @@ final class PushNotificationManager: NSObject {
             }
         }
     }
+    
+    func attachCurrentTokenToLoggedInUser() {
+        guard let uid = Auth.auth().currentUser?.uid,
+              let token = Messaging.messaging().fcmToken else { return }
+        saveTokenToFirestore(token, userId: uid)
+    }
 }
 
 // MARK: - MessagingDelegate
@@ -92,7 +99,7 @@ final class PushNotificationManager: NSObject {
 extension PushNotificationManager: MessagingDelegate {
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
         guard let fcmToken else { return }
-        saveTokenToFirestore(fcmToken)
+        saveTokenToFirestore(fcmToken, userId: Auth.auth().currentUser?.uid)
         if isPushEnabled {
             Messaging.messaging().subscribe(toTopic: pushTopicAllUsers) { error in
                 if let error {
@@ -107,14 +114,14 @@ extension PushNotificationManager: MessagingDelegate {
 
 extension PushNotificationManager: UNUserNotificationCenterDelegate {
     func userNotificationCenter(_ center: UNUserNotificationCenter,
-                                 willPresent notification: UNNotification,
-                                 withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+                                willPresent notification: UNNotification,
+                                withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
         completionHandler([.banner, .list, .sound])
     }
-
+    
     func userNotificationCenter(_ center: UNUserNotificationCenter,
-                                 didReceive response: UNNotificationResponse,
-                                 withCompletionHandler completionHandler: @escaping () -> Void) {
+                                didReceive response: UNNotificationResponse,
+                                withCompletionHandler completionHandler: @escaping () -> Void) {
         let userInfo = response.notification.request.content.userInfo
         if let newsId = userInfo["newsId"] as? String {
             DispatchQueue.main.async {
