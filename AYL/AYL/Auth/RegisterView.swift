@@ -19,17 +19,32 @@ struct RegisterView: View {
     @State private var role: ParticipantRole = .unspecified
     @State private var email = ""
     @State private var password = ""
+    @State private var birthDate: Date = Calendar.current.date(byAdding: .year, value: -18, to: Date()) ?? Date()
+    @State private var acceptedLegalRepresentativeConsent = false
     @State private var acceptedTerms = false
     @State private var showingTerms = false
     @State private var acceptedPersonalData = false
     @State private var showingPersonalDataPolicy = false
     
+    private var minBirthDate: Date {
+        Calendar.current.date(byAdding: .year, value: -100, to: Date()) ?? Date()
+    }
+    
+    private var ageYears: Int {
+        Calendar.current.dateComponents([.year], from: birthDate, to: Date()).year ?? 0
+    }
+    
+    private var isUnder14: Bool {
+        ageYears < 14
+    }
+    
     private var isFormValid: Bool {
         !name.trimmingCharacters(in: .whitespaces).isEmpty &&
         !email.trimmingCharacters(in: .whitespaces).isEmpty &&
         password.count >= 6 &&
-        acceptedTerms
-        && acceptedPersonalData
+        acceptedTerms &&
+        acceptedPersonalData &&
+        (!isUnder14 || acceptedLegalRepresentativeConsent)
     }
     
     // MARK: - Body
@@ -41,6 +56,8 @@ struct RegisterView: View {
                     TextField("Имя", text: $name)
                     TextField("Телефон", text: $phone)
                         .keyboardType(.phonePad)
+                    DatePicker("Дата рождения", selection: $birthDate, in: minBirthDate...Date(), displayedComponents: .date)
+                        .environment(\.locale, Locale(identifier: "ru_RU"))
                     Picker("Роль", selection: $role) {
                         ForEach(ParticipantRole.profileRoles) { role in
                             Text(role.displayName).tag(role)
@@ -72,6 +89,12 @@ struct RegisterView: View {
                         }
                         .font(.subheadline)
                         .underline()
+                    }
+                    if isUnder14 {
+                        Toggle(isOn: $acceptedLegalRepresentativeConsent) {
+                            Text("Регистрацию ребёнка младше 14 лет подтверждает его законный представитель (родитель, усыновитель или опекун) и даёт согласие на обработку персональных данных ребёнка")
+                                .font(.subheadline)
+                        }
                     }
                 }
                 Button {
@@ -106,7 +129,15 @@ struct RegisterView: View {
     // MARK: - Private methods
     
     private func register() {
-        viewModel.register(name: name, phone: phone, role: role, email: email, password: password) { success in
+        viewModel.register(
+            name: name,
+            phone: phone,
+            role: role,
+            email: email,
+            password: password,
+            birthDate: birthDate,
+            legalRepresentativeConsent: isUnder14 ? acceptedLegalRepresentativeConsent : false
+        ) { success in
             if success {
                 dismiss()
             }

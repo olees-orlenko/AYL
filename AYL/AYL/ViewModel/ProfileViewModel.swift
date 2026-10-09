@@ -30,7 +30,16 @@ final class ProfileViewModel: ObservableObject {
     
     // MARK: - Auth
     
-    func register(name: String, phone: String, role: ParticipantRole, email: String, password: String, completion: @escaping (Bool) -> Void) {
+    func register(
+        name: String,
+        phone: String,
+        role: ParticipantRole,
+        email: String,
+        password: String,
+        birthDate: Date,
+        legalRepresentativeConsent: Bool,
+        completion: @escaping (Bool) -> Void
+    ) {
         errorMessage = ""
         isSaving = true
         Auth.auth().createUser(withEmail: email, password: password) { [weak self] result, error in
@@ -47,14 +56,18 @@ final class ProfileViewModel: ObservableObject {
                 completion(false)
                 return
             }
-            let data: [String: Any] = [
+            var data: [String: Any] = [
                 "name": name.trimmingCharacters(in: .whitespaces),
                 "phone": phone.trimmingCharacters(in: .whitespaces),
                 "role": role.rawValue,
                 "email": email.trimmingCharacters(in: .whitespaces),
+                "birthDate": Timestamp(date: birthDate),
                 "createdAt": FieldValue.serverTimestamp(),
                 "personalDataConsentAt": FieldValue.serverTimestamp()
             ]
+            if legalRepresentativeConsent {
+                data["legalRepresentativeConsentAt"] = FieldValue.serverTimestamp()
+            }
             self.db.collection("participants").document(uid).setData(data) { error in
                 self.isSaving = false
                 if let error {
@@ -121,7 +134,9 @@ final class ProfileViewModel: ObservableObject {
                 blockedUsers: data["blockedUsers"] as? [String: String] ?? [:],
                 personalDataConsentAt: (data["personalDataConsentAt"] as? Timestamp)?.dateValue(),
                 marketingPushConsent: data["marketingPushConsent"] as? Bool ?? false,
-                marketingPushConsentAt: (data["marketingPushConsentAt"] as? Timestamp)?.dateValue()
+                marketingPushConsentAt: (data["marketingPushConsentAt"] as? Timestamp)?.dateValue(),
+                birthDate: (data["birthDate"] as? Timestamp)?.dateValue(),
+                legalRepresentativeConsentAt: (data["legalRepresentativeConsentAt"] as? Timestamp)?.dateValue()
             )
         }
     }
@@ -157,7 +172,9 @@ final class ProfileViewModel: ObservableObject {
                 blockedUsers: participant.blockedUsers,
                 personalDataConsentAt: participant.personalDataConsentAt,
                 marketingPushConsent: participant.marketingPushConsent,
-                marketingPushConsentAt: participant.marketingPushConsentAt
+                marketingPushConsentAt: participant.marketingPushConsentAt,
+                birthDate: participant.birthDate,
+                legalRepresentativeConsentAt: participant.legalRepresentativeConsentAt
             )
             completion(true)
         }
@@ -179,7 +196,9 @@ final class ProfileViewModel: ObservableObject {
             blockedUsers: participant.blockedUsers,
             personalDataConsentAt: participant.personalDataConsentAt,
             marketingPushConsent: enabled,
-            marketingPushConsentAt: enabled ? Date() : nil
+            marketingPushConsentAt: enabled ? Date() : nil,
+            birthDate: participant.birthDate,
+            legalRepresentativeConsentAt: participant.legalRepresentativeConsentAt
         )
     }
     
@@ -268,7 +287,9 @@ final class ProfileViewModel: ObservableObject {
                             blockedUsers: participant.blockedUsers,
                             personalDataConsentAt: participant.personalDataConsentAt,
                             marketingPushConsent: participant.marketingPushConsent,
-                            marketingPushConsentAt: participant.marketingPushConsentAt
+                            marketingPushConsentAt: participant.marketingPushConsentAt,
+                            birthDate: participant.birthDate,
+                            legalRepresentativeConsentAt: participant.legalRepresentativeConsentAt
                         )
                         completion(true)
                     }

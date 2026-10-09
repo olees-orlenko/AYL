@@ -70,6 +70,8 @@ struct Participant: Identifiable {
     var personalDataConsentAt: Date?
     var marketingPushConsent: Bool
     var marketingPushConsentAt: Date?
+    let birthDate: Date?
+    let legalRepresentativeConsentAt: Date?
     
     init(
         id: String,
@@ -82,7 +84,9 @@ struct Participant: Identifiable {
         blockedUsers: [String: String] = [:],
         personalDataConsentAt: Date? = nil,
         marketingPushConsent: Bool = false,
-        marketingPushConsentAt: Date? = nil
+        marketingPushConsentAt: Date? = nil,
+        birthDate: Date? = nil,
+        legalRepresentativeConsentAt: Date? = nil
     ) {
         self.id = id
         self.name = name
@@ -95,5 +99,7 @@ struct Participant: Identifiable {
         self.personalDataConsentAt = personalDataConsentAt
         self.marketingPushConsent = marketingPushConsent
         self.marketingPushConsentAt = marketingPushConsentAt
+        self.birthDate = birthDate
+        self.legalRepresentativeConsentAt = legalRepresentativeConsentAt
     }
 }
