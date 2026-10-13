@@ -129,7 +129,7 @@ struct EventsListView: View {
                     .foregroundColor(.violet)
                 VStack(spacing: 10) {
                     ForEach(items) { event in
-                        NavigationLink(destination: EventDetailView()) {
+                        NavigationLink(destination: EventDetailView(viewModel: viewModel, event: event)) {
                             eventRow(event)
                         }
                         .buttonStyle(.plain)
