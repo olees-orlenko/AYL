@@ -78,6 +78,7 @@ struct MainView: View {
             formatsSection
             methodologySection
             whyChooseUsLink
+            pastEventsLink
             footerSection
         }
     }
@@ -168,6 +169,25 @@ struct MainView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Почему выбирают нас?")
+                        .font(.title3.bold())
+                        .foregroundColor(.violet)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.violet)
+            }
+            .padding(.vertical, 10)
+        }
+    }
+    
+    private var pastEventsLink: some View {
+        NavigationLink {
+            EventsListView()
+        } label: {
+            HStack {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Прошедшие мероприятия")
                         .font(.title3.bold())
                         .foregroundColor(.violet)
                 }
