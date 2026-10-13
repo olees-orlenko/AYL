@@ -157,8 +157,7 @@ final class EventsViewModel: ObservableObject {
     
     func markParticipated(in event: Event, uid: String, completion: @escaping (Bool) -> Void) {
         let participantRef = db.collection("participants").document(uid)
-        participantRef.getDocument { [weak self] snapshot, _ in
-            guard let self else { return }
+        participantRef.getDocument { snapshot, _ in
             let roleRaw = snapshot?.data()?["role"] as? String ?? ""
             let role = ParticipantRole(rawValue: roleRaw) ?? .unspecified
             let data: [String: Any] = [

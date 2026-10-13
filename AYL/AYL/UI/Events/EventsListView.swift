@@ -71,7 +71,7 @@ struct EventsListView: View {
                 }
             }
             .sheet(isPresented: $showingAddSheet) {
-                EventFormView()
+                EventFormView(viewModel: viewModel, existingEvent: nil)
             }
             .onAppear { viewModel.fetchEvents() }
         }

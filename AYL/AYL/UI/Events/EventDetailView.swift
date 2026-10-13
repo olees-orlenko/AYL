@@ -53,7 +53,7 @@ struct EventDetailView: View {
         .navigationBarBackButtonHidden(true)
         .toolbar { toolbarContent }
         .sheet(isPresented: $showingEdit) {
-            EventFormView()
+            EventFormView(viewModel: viewModel, existingEvent: event)
         }
         .fullScreenCover(item: $fullPhoto) { wrapper in
             ZStack {
