@@ -22,6 +22,11 @@ struct EventDetailView: View {
     @State private var showingEdit = false
     @State private var showingDeleteConfirmation = false
     @State private var fullPhoto: PhotoWrapper? = nil
+    @State private var showingRoleSelection = false
+    
+    private var eventParticipationRoles: [ParticipantRole] {
+        ParticipantRole.allCases.filter { $0 != .unspecified && $0 != .graduate }
+    }
     
     private var canEdit: Bool {
         authManager.isParticipantLoggedIn || authManager.isAdminLoggedIn
@@ -147,7 +152,7 @@ struct EventDetailView: View {
     private var participationButton: some View {
         if authManager.isParticipantLoggedIn {
             Button {
-                markParticipated()
+                showingRoleSelection = true
             } label: {
                 Group {
                     if let participated = hasParticipated {
@@ -158,6 +163,7 @@ struct EventDetailView: View {
                         .foregroundColor(participated ? .minty : .white)
                     } else {
                         ProgressView()
+                            .tint(.secondary)
                     }
                 }
                 .font(.system(size: 15, weight: .semibold))
@@ -168,7 +174,46 @@ struct EventDetailView: View {
             }
             .disabled(hasParticipated != false || isMarkingParticipation)
             .animation(.easeInOut(duration: 0.25), value: hasParticipated)
+            .sheet(isPresented: $showingRoleSelection) {
+                roleSelectionSheet
+                    .presentationDragIndicator(.visible)
+                    .presentationBackground(Color(.systemBackground))
+            }
         }
+    }
+    
+    private var roleSelectionSheet: some View {
+        VStack(spacing: 10) {
+            Text("Кем вы были на этом мероприятии?")
+                .font(.headline)
+                .padding(.top, 30)
+                .padding(.bottom, 4)
+            
+            VStack(spacing: 10) {
+                ForEach(eventParticipationRoles) { role in
+                    Button {
+                        showingRoleSelection = false
+                        markParticipated(role: role)
+                    } label: {
+                        Text(role.title)
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundColor(.lightBlue)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(Color.minty.opacity(0.25))
+                            .cornerRadius(12)
+                    }
+                }
+            }
+            .padding(.horizontal, 16)
+            Button("Отмена") {
+                showingRoleSelection = false
+            }
+            .foregroundColor(.secondary)
+            .padding(.vertical, 20)
+            Spacer()
+        }
+        .presentationDetents([.medium])
     }
     
     private var backgroundColor: Color {
@@ -262,10 +307,10 @@ struct EventDetailView: View {
     
     // MARK: - Private methods
     
-    private func markParticipated() {
+    private func markParticipated(role: ParticipantRole) {
         guard let uid = authManager.currentUserId else { return }
         isMarkingParticipation = true
-        viewModel.markParticipated(in: event, uid: uid) { success in
+        viewModel.markParticipated(in: event, uid: uid, role: role) { success in
             isMarkingParticipation = false
             if success { hasParticipated = true }
         }

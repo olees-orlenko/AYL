@@ -155,23 +155,19 @@ final class EventsViewModel: ObservableObject {
     
     // MARK: - Participation
     
-    func markParticipated(in event: Event, uid: String, completion: @escaping (Bool) -> Void) {
-        let participantRef = db.collection("participants").document(uid)
-        participantRef.getDocument { snapshot, _ in
-            let roleRaw = snapshot?.data()?["role"] as? String ?? ""
-            let role = ParticipantRole(rawValue: roleRaw) ?? .unspecified
-            let data: [String: Any] = [
-                "eventTitle": event.displayTitle,
-                "eventDate": Timestamp(date: event.eventDate),
-                "role": role.rawValue,
-                "newsId": event.id,
-                "createdAt": FieldValue.serverTimestamp()
-            ]
-            participantRef.collection("participations").document(event.id)
-                .setData(data, merge: true) { error in
-                    completion(error == nil)
-                }
-        }
+    func markParticipated(in event: Event, uid: String, role: ParticipantRole, completion: @escaping (Bool) -> Void) {
+        let data: [String: Any] = [
+            "eventTitle": event.displayTitle,
+            "eventDate": Timestamp(date: event.eventDate),
+            "role": role.rawValue,
+            "newsId": event.id,
+            "createdAt": FieldValue.serverTimestamp()
+        ]
+        db.collection("participants").document(uid)
+            .collection("participations").document(event.id)
+            .setData(data, merge: true) { error in
+                completion(error == nil)
+            }
     }
     
     func checkParticipated(in event: Event, uid: String?, completion: @escaping (Bool) -> Void) {
