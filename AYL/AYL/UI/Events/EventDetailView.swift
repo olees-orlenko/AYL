@@ -17,7 +17,7 @@ struct EventDetailView: View {
     @EnvironmentObject var authManager: AuthManager
     @Environment(\.dismiss) var dismiss
     
-    @State private var hasParticipated = false
+    @State private var hasParticipated: Bool? = nil
     @State private var isMarkingParticipation = false
     @State private var showingEdit = false
     @State private var showingDeleteConfirmation = false
@@ -103,14 +103,13 @@ struct EventDetailView: View {
     }
     
     private var placeholderView: some View {
-        ZStack {
+        ZStack(alignment: .top) {
             Image("ayl_logo_1")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
+                .padding(.top, 90)
         }
-        .frame(maxWidth: .infinity)
-        .frame(height: 250)
-        .padding(.top, 60)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
     
     private var titleSection: some View {
@@ -150,18 +149,33 @@ struct EventDetailView: View {
             Button {
                 markParticipated()
             } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: hasParticipated ? "checkmark.circle.fill" : "person.badge.plus")
-                    Text(hasParticipated ? "Отмечено в профиле" : "Я тоже участвовал")
+                Group {
+                    if let participated = hasParticipated {
+                        HStack(spacing: 6) {
+                            Image(systemName: participated ? "checkmark.circle.fill" : "person.badge.plus")
+                            Text(participated ? "Отмечено в профиле" : "Я тоже участвовал")
+                        }
+                        .foregroundColor(participated ? .minty : .white)
+                    } else {
+                        ProgressView()
+                    }
                 }
                 .font(.system(size: 15, weight: .semibold))
-                .foregroundColor(hasParticipated ? .minty : .white)
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(hasParticipated ? Color.minty.opacity(0.12) : Color.minty)
+                .background(backgroundColor)
                 .cornerRadius(15)
             }
-            .disabled(hasParticipated || isMarkingParticipation)
+            .disabled(hasParticipated != false || isMarkingParticipation)
+            .animation(.easeInOut(duration: 0.25), value: hasParticipated)
+        }
+    }
+    
+    private var backgroundColor: Color {
+        switch hasParticipated {
+        case .some(true): return Color.minty.opacity(0.12)
+        case .some(false): return Color.minty
+        case nil: return Color.gray.opacity(0.12)
         }
     }
     
@@ -205,11 +219,14 @@ struct EventDetailView: View {
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
                     ForEach(event.photoUrls, id: \.self) { urlString in
                         if let url = URL(string: urlString) {
-                            KFImage(url)
-                                .resizable()
-                                .aspectRatio(1, contentMode: .fill)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 100)
+                            Color.clear
+                                .aspectRatio(1, contentMode: .fit)
+                                .overlay(
+                                    KFImage(url)
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                        .clipped()
+                                )
                                 .clipped()
                                 .cornerRadius(10)
                                 .onTapGesture { fullPhoto = PhotoWrapper(url: urlString) }

@@ -77,8 +77,10 @@ struct MainView: View {
             introSection
             formatsSection
             methodologySection
-            whyChooseUsLink
-            pastEventsLink
+            VStack(spacing: 0) {
+                whyChooseUsLink
+                pastEventsLink
+            }
             footerSection
         }
     }
