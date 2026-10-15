@@ -72,21 +72,6 @@ struct EventCard: View {
         .padding(.horizontal, 2)
     }
     
-    private var typeBadge: some View {
-        HStack(spacing: 4) {
-            Image(systemName: "calendar.badge.clock")
-                .font(.system(size: 11, weight: .bold))
-            Text(event.type.displayName)
-                .font(.caption2)
-                .fontWeight(.bold)
-        }
-        .foregroundColor(.violet)
-        .padding(.vertical, 4)
-        .padding(.horizontal, 8)
-        .background(Color.violet.opacity(0.12))
-        .cornerRadius(8)
-    }
-    
     private var footerSection: some View {
         HStack {
             Text(event.formattedDate)
