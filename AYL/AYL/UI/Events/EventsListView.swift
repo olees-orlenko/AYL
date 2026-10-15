@@ -33,7 +33,7 @@ struct EventsListView: View {
     
     private var conferences: [Event] { filteredEvents.filter { $0.type == .conference } }
     private var trainings: [Event] { filteredEvents.filter { $0.type == .training } }
-    
+
     private var canAddEvent: Bool {
         authManager.isParticipantLoggedIn || authManager.isAdminLoggedIn
     }
@@ -127,41 +127,16 @@ struct EventsListView: View {
                 Text(title)
                     .font(.title3.bold())
                     .foregroundColor(.violet)
-                VStack(spacing: 10) {
+                VStack(spacing: 16) {
                     ForEach(items) { event in
                         NavigationLink(destination: EventDetailView(viewModel: viewModel, event: event)) {
-                            eventRow(event)
+                            EventCard(event: event)
                         }
                         .buttonStyle(.plain)
                     }
                 }
             }
         }
-    }
-    
-    private func eventRow(_ event: Event) -> some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(event.displayTitle)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.primary)
-                HStack(spacing: 6) {
-                    Image(systemName: "mappin.circle.fill")
-                    Text(event.city)
-                    Text("·")
-                    Text(event.formattedDate)
-                }
-                .font(.caption)
-                .foregroundColor(.secondary)
-            }
-            Spacer()
-            Image(systemName: "chevron.right")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(.violet)
-        }
-        .padding(12)
-        .background(Color(UIColor.secondarySystemGroupedBackground))
-        .cornerRadius(15)
     }
 }
 
