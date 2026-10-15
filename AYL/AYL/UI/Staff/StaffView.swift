@@ -56,6 +56,7 @@ struct StaffView: View {
                             }
                         }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 25)
                     .padding(.top, 20)
                     .padding(.bottom, 40)
