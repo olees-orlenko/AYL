@@ -310,7 +310,7 @@ final class ProfileViewModel: ObservableObject {
             .order(by: "eventDate", descending: true)
             .getDocuments { [weak self] snapshot, _ in
                 guard let self, let documents = snapshot?.documents else { return }
-                self.participations = documents.compactMap { doc -> Participation? in
+                let parsed: [Participation] = documents.compactMap { doc -> Participation? in
                     let data = doc.data()
                     guard let title = data["eventTitle"] as? String,
                           let timestamp = data["eventDate"] as? Timestamp,
@@ -324,7 +324,43 @@ final class ProfileViewModel: ObservableObject {
                         newsId: data["newsId"] as? String
                     )
                 }
+                self.participations = parsed
+                self.refreshWithLiveEventDates(parsed)
             }
+    }
+    
+    private func refreshWithLiveEventDates(_ items: [Participation]) {
+        let group = DispatchGroup()
+        var updated = items
+        for (index, item) in items.enumerated() {
+            guard let newsId = item.newsId else { continue }
+            group.enter()
+            db.collection("Events").document(newsId).getDocument { snapshot, _ in
+                defer { group.leave() }
+                guard let data = snapshot?.data(),
+                      let timestamp = data["eventDate"] as? Timestamp else { return }
+                let title = (data["title"] as? String) ?? ""
+                let city = (data["city"] as? String) ?? ""
+                let typeRaw = (data["type"] as? String) ?? ""
+                let displayTitle: String
+                if title.trimmingCharacters(in: .whitespaces).isEmpty {
+                    let typeName = EventType(rawValue: typeRaw)?.displayName ?? ""
+                    displayTitle = "\(typeName) — \(city)"
+                } else {
+                    displayTitle = title
+                }
+                updated[index] = Participation(
+                    id: item.id,
+                    eventTitle: displayTitle,
+                    eventDate: timestamp.dateValue(),
+                    role: item.role,
+                    newsId: item.newsId
+                )
+            }
+        }
+        group.notify(queue: .main) { [weak self] in
+            self?.participations = updated.sorted { $0.eventDate > $1.eventDate }
+        }
     }
     
     // MARK: - Achievment
