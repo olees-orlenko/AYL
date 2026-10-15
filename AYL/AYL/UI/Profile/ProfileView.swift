@@ -35,6 +35,10 @@ struct ProfileView: View {
     @State private var showingBannedUsersAdmin = false
     @AppStorage(pushEnabledDefaultsKey) private var pushEnabled = false
     
+    private var certificateCutoffDate: Date {
+        DateComponents(calendar: .current, year: 2025, month: 1, day: 1).date ?? .distantPast
+    }
+    
     // MARK: - Body
     
     var body: some View {
@@ -565,10 +569,10 @@ struct ProfileView: View {
             }
         }
     }
-    
+
     @ViewBuilder
     private func certificateControl(for item: Participation) -> some View {
-        if let newsId = item.newsId, item.eventDate < Date() {
+        if let newsId = item.newsId, item.eventDate < Date(), item.eventDate >= certificateCutoffDate {
             switch certificateStatuses[newsId] {
             case .approved:
                 Button {
@@ -641,7 +645,7 @@ struct ProfileView: View {
             return
         }
         for item in viewModel.participations {
-            guard let newsId = item.newsId, item.eventDate < Date() else { continue }
+            guard let newsId = item.newsId, item.eventDate < Date(), item.eventDate >= certificateCutoffDate else { continue }
             certificateRequestsViewModel.fetchMyRequest(uid: uid, newsId: newsId) { request in
                 certificateStatuses[newsId] = request?.status
             }
